@@ -6,6 +6,7 @@ active promoter means active intergenic hypomethylated region
 ####ignore heterochromatin, CNVs, use 1,2,3,4,5,6,7,8
 #dna methylation (took RRBS, not 450k for quantity reasons, methylation.txt)
 any site should be okay
+####try 50%+
 #DNAse I hypersens. sites (dnase.txt)
 the higher the score, the more sensitive.
 ####try greater than 400, doesn't seem to be many greater than 700
