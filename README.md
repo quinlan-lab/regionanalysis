@@ -9,7 +9,7 @@ any site should be okay
 ####try 50%+
 #DNAse I hypersens. sites (dnase.txt)
 the higher the score, the more sensitive.
-####try greater than 400, doesn't seem to be many greater than 700
+####try greater than 400, doesn't seem to be many greater than 900
 #TFBS sites (tfbs.txt)
 the higher the score, the more signal seen.
 ####max is 1000, so try 700+
