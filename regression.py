@@ -26,13 +26,11 @@ ax0.set_ylabel('log(1.0 + sum(Coverage fractions))')
 ax1 = plt.subplot(gs[1])
 ax1.plot(cpg,resid,'r.')
 ax1.set_xlabel('CpG fraction')
-ax1.set_ylabel('Residuals')
+ax1.set_ylabel('Studentized Residuals')
 
 plt.savefig("/uufs/chpc.utah.edu/common/home/u1021864/analysis/plots/regression.png")
 plt.close()
 
 resid_pctile = 100.0 * np.sort(resid).searchsorted(resid) / float(len(resid))
 cov_pctile = 100.0 * np.sort(ys).searchsorted(ys) / float(len(ys))
-
-
 
