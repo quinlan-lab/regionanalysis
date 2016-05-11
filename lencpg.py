@@ -5,7 +5,7 @@ import sys
 from matplotlib import pyplot as plt
 import numpy as np
 
-f = open('foo','r')
+f = open('residualgist/residuals.txt','r')
 f.readline()
 cpg=[];lens=[]
 for line in f:
