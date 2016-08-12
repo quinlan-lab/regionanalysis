@@ -9,7 +9,7 @@ import statsmodels.api as sm
 from statsmodels.stats.outliers_influence import OLSInfluence
 import pandas as pd
 
-variables = pickle.load(open("var.pickle", "rb"))
+variables = pickle.load(open("exacresiduals/var.pickle", "rb"))
 resid=variables['resid']
 raws=variables['rawresid']
 ys=variables['cov']
