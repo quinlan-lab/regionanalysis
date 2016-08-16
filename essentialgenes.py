@@ -28,5 +28,6 @@ for gene in iterable:
     genes[gene['Gene']] = map(float,(gene['KBM7 CS'], gene['KBM7 adjusted p-value'], gene['Raji CS'], gene['Raji adjusted p-value'], gene['Jiyoye CS'], gene['Jiyoye adjusted p-value'], gene['K562 CS'],gene['K562 adjusted p-value']))
 
 genelist=rank(genes)
-print genelist
+for gene in genelist:
+    print gene+"\t"+str(genelist[gene])
 
