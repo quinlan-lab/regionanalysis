@@ -1,6 +1,7 @@
 SITES=$1 REGIONS=$2 COMP=$3
 HOME=/uufs/chpc.utah.edu/common/home/u1021864
 DATA=/scratch/ucgd/lustre/u1021864/serial
+#DATA=exacresiduals/data
 set -e
 check(){
         obs=$1
@@ -22,7 +23,7 @@ fi
 HOTSPOT=$HOME'/analysis/intermeds/'$(echo $COMP | rev | cut -f 1 -d "/" | rev | cut -f 1 -d ".")'.gtf'
 if [[ $SITES -eq 0 && ! -f "$HOTSPOT" ]]
 then
-    awk 'NR==FNR{a[$1]}; {for (i in a) if (i == $8) print}' $COMP FS="\"" $DATA/vepcanonicalexons.gtf > $HOTSPOT
+    awk 'NR==FNR{a[$1]}; {for (i in a) if (i == $8) print}' $COMP FS="\"" <(zcat $DATA/Homo_sapiens.GRCh37.75.gtf.gz) > $HOTSPOT
 fi
 if [[ $SITES -eq 1 ]]
 then
@@ -33,7 +34,7 @@ OUT=$FOLDER/$FOLDER'_'$(echo $HOTSPOT | rev | cut -f 1 -d "/" | rev | cut -f 1 -
 if [[ ! -f "results/$OUT" ]]
 then
     $HOME/software/poverlap/poverlap.py poverlap --a $REGIONS --b $HOTSPOT \
-        -g $DATA/human.hg19.genome --include $DATA/vepcanonicalexons.gtf -N 1000 \
+        -g $DATA/human.hg19.genome -N 1000 \
         > results/$OUT
 else
     echo "results/$OUT already exists."

@@ -21,7 +21,7 @@ def rank(genes):
                 genelist[a]+=1
     return genelist
 
-it = ts.reader('genescreens/wangetal2015.txt')
+it = ts.reader('ogfiles/wangetal2015.txt')
 iterable = (i for i in it)
 genes = {}
 for gene in iterable:
