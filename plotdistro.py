@@ -5,14 +5,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 import subprocess as sp
 import argparse
+import scipy.stats as ss
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-f", "--files", nargs="*", help="the list of your files, in order: constrained regions, pathogenic denovos, control denovos (if applicable)", required=True)
 parser.add_argument("-s", "--study-name", help="name of your study, for plot label", required=True)
 parser.add_argument("-r", "--range", help="range of second plot",nargs=2, default=[90,100])
 parser.add_argument("-n", "--no-zoom", help="use this argument if you don't want a second plot", action="store_true", default=False)
+parser.add_argument("constrained")
+parser.add_argument("pathogenic")
+parser.add_argument("benign", nargs='?')
 args=parser.parse_args()
-files=args.files
+regions=args.constrained
+pathogenic=args.pathogenic
+benigns=args.benign
 study_name=args.study_name
 zoom=args.range
 
@@ -21,7 +26,7 @@ zoom=args.range
 #plotting the distribution of residuals for pathogenic vs benign
 
 lengths=[]
-f = open(files[0], 'r')
+f = open(regions, 'r')
 f.readline()
 for line in f:
     fields = line.strip().split("\t")
@@ -36,19 +41,19 @@ def intersect(hotspot):
             p.kill()
         except OSError:
             pass
-    p1 = sp.Popen("sed '1d' "+files[0], shell = True, stdout = sp.PIPE)
+    p1 = sp.Popen("sed '1d' "+regions, shell = True, stdout = sp.PIPE)
     p2 = sp.Popen(['bedtools', 'intersect', '-a', 'stdin', '-b', hotspot], stdin = p1.stdout, stdout = sp.PIPE)
     output,error = p2.communicate()
     killproc(p1); killproc(p2)
     return output.strip()
 
 bentile,pathtile = [],[]
-if len(files)>2:
-    benign = intersect(files[2]) #sys.argv[1]='benign.bed'
+if benign:
+    benign = intersect(benigns) #sys.argv[1]='benign.bed'
     for line in benign.split("\n"):
         fields = line.strip().split("\t")
         bentile.append(float(fields[11])) # percentile from residuals.txt
-patho = intersect(files[1]) #sys.argv[2]='patho.bed'
+patho = intersect(pathogenic) #sys.argv[2]='patho.bed'
 for line in patho.split("\n"):
     fields = line.strip().split("\t")
     pathtile.append(float(fields[11]))
@@ -65,14 +70,20 @@ p,p_edges=np.histogram(pathtile, bins=40, range=rng)
 p=map(lambda x: float(x)/sum(p), p)
 width_p = (p_edges[1]-p_edges[0])
 ax.bar(p_edges[:-1], p, width = width_p, color = 'r', label = 'pathogenic', alpha = 0.3)
-if len(files)>2:
+if benign:
     b,b_edges=np.histogram(bentile, bins=40, range=rng)
     b=map(lambda x: float(x)/sum(b), b)
     width_b = (b_edges[1]-b_edges[0])
     ax.bar(b_edges[:-1], b, width = width_b, color = 'b', label = 'benign', alpha = 0.3)
+title="Percentile Pathogenicity Comparison for "+study_name+"\n"
+if benign:
+    ustat,pval=ss.mannwhitneyu(b,p,use_continuity=False,alternative='greater')
+    plt.title(title+"U-test: "+ustat+" p-value: "+pval)
+else:
+    skew=ss.skew(p)
+    plt.title(title+"skewness: "+skew+[" (negative)"," (positive)"]*int(skew>=0)) #negative skew implies more pathogenic
 ax.set_xlabel("Percentile")
 ax.set_ylabel("Frequency")
-plt.title("Percentile Pathogenicity Comparison for "+study_name)
 ax.legend(loc='upper left')
 plt.savefig("plots/"+study_name+"distribution.png")
 plt.close()
@@ -93,7 +104,7 @@ if not args.no_zoom:
     p=map(lambda x: float(x)/sum(p), p)
     width_p = (p_edges[1]-p_edges[0])
     ax.bar(p_edges[:-1], p, width = width_p, color = 'r', label = 'pathogenic', alpha = 0.3)
-    if len(files)>2:
+    if benign:
         b,b_edges=np.histogram(bentile, bins=400, range=rng)
         b=map(lambda x: float(x)/sum(b), b)
         width_b = (b_edges[1]-b_edges[0])
