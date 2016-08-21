@@ -48,7 +48,7 @@ def intersect(hotspot):
     return output.strip()
 
 bentile,pathtile = [],[]
-if benign:
+if benigns:
     benign = intersect(benigns) #sys.argv[1]='benign.bed'
     for line in benign.split("\n"):
         fields = line.strip().split("\t")
@@ -70,18 +70,19 @@ p,p_edges=np.histogram(pathtile, bins=40, range=rng)
 p=map(lambda x: float(x)/sum(p), p)
 width_p = (p_edges[1]-p_edges[0])
 ax.bar(p_edges[:-1], p, width = width_p, color = 'r', label = 'pathogenic', alpha = 0.3)
-if benign:
+if benigns:
     b,b_edges=np.histogram(bentile, bins=40, range=rng)
     b=map(lambda x: float(x)/sum(b), b)
     width_b = (b_edges[1]-b_edges[0])
     ax.bar(b_edges[:-1], b, width = width_b, color = 'b', label = 'benign', alpha = 0.3)
 title="Percentile Pathogenicity Comparison for "+study_name+"\n"
-if benign:
-    ustat,pval=ss.mannwhitneyu(b,p,use_continuity=False,alternative='greater')
-    plt.title(title+"U-test: "+ustat+" p-value: "+pval)
+if benigns:
+    ustat,upval=map(lambda p: round(p,3), ss.mannwhitneyu(pathtile,bentile,use_continuity=False,alternative='greater')) #pathogenic should be greater than benign
+    kstat,kpval=map(lambda p: round(p,3), ss.ks_2samp(np.array(pathtile),np.array(bentile)))
+    plt.title(title+"U-test: "+str(ustat)+" p-value: "+str(upval)+"; ks-test: "+str(kstat)+" p-value: "+str(kpval))
 else:
-    skew=ss.skew(p)
-    plt.title(title+"skewness: "+skew+[" (negative)"," (positive)"]*int(skew>=0)) #negative skew implies more pathogenic
+    skew=ss.skew(pathtile)
+    plt.title(title+"skewness: "+str(skew)+[" (negative)"," (positive)"][int(skew>=0)]) #negative skew implies more pathogenic
 ax.set_xlabel("Percentile")
 ax.set_ylabel("Frequency")
 ax.legend(loc='upper left')
@@ -104,7 +105,7 @@ if not args.no_zoom:
     p=map(lambda x: float(x)/sum(p), p)
     width_p = (p_edges[1]-p_edges[0])
     ax.bar(p_edges[:-1], p, width = width_p, color = 'r', label = 'pathogenic', alpha = 0.3)
-    if benign:
+    if benigns:
         b,b_edges=np.histogram(bentile, bins=400, range=rng)
         b=map(lambda x: float(x)/sum(b), b)
         width_b = (b_edges[1]-b_edges[0])
