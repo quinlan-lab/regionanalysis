@@ -15,7 +15,7 @@ if not os.path.isfile(filename):
     j = json.loads(j)["'wc -l'"]
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.hist(j['sims'],alpha=0.5)
+    ax.hist(j['sims'],alpha=0.5) # if you get an error here, uncomment the commented out met['sims'] = sims part of poverlap.py
     plt.xlabel("Intersections")
     plt.ylabel("Frequency")
     plt.title(figname)
