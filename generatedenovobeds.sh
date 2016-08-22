@@ -4,4 +4,4 @@ tr -s "" "\n" < ogfiles/homsy_database_S03.txt | grep -v '\t\t\t' | cut -f 2- |
 
 tr -s "" "\n" < ogfiles/deligtetal.txt | grep -v "p.(=)" | sed '1d' | grep -v '\t\t\t\t\t\t\t\t' | cut -f 4- | sed 's/^chr//g' | grep -w -v 'NO' > ~/analysis/denovos/deligt.bed
 
-tr -s "^M" "\n" < ogfiles/deligtetal.txt | grep -v "p.(=)" | sed '1d' | grep -v '\t\t\t\t\t\t\t\t' | cut -f 4- | sed 's/^chr//g' | grep -w 'NO' > ~/analysis/denovos/deligtcontrol.bed
+tr -s "" "\n" < ogfiles/deligtetal.txt | grep -v "p.(=)" | sed '1d' | grep -v '\t\t\t\t\t\t\t\t' | cut -f 4- | sed 's/^chr//g' | grep -w 'NO' > ~/analysis/denovos/deligtcontrol.bed
