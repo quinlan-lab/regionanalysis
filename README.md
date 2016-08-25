@@ -29,14 +29,17 @@ The folder "results" is where the Monte Carlo overlap files in JSON format are s
 The script "generateplots.sh" calls my local version of poverlap (from https://github.com/brentp/poverlap, stored in /uufs/chpc.utah.edu/common/home/u1021864/software/poverlap/poverlap.py; it prints the simulation results for Monte Carlo shuffling which the github version does not do by default) so that "plot.py" can plot the JSON formatted results in the folder "results".
 
 The script "plotdistro.py" is used to make the histogram plots for DNMs and Clinvar variant and using it looks like:
+
     python plotdistro.py exacresiduals/results/weightedresiduals.txt denovos/homsy.bed denovos/homsycontrol.bed -s HomsyCHD
 First file is your constrained regions, second is "pathogenic variants" or your basepairs/regions of interest.  If applicable the third argument is your control or "benign" variants or regions of interest.  -s is mandatory and is the name of your study so the script and place it into the file name and the title.  If you don't want to have a 90-100 percentile zoomed second plot, you can use -n for no zoom and it will just make the one plot.  Additionally, if you want to specify a particular range for zooming in on for the second plot just use -r and type two floats of your choice a minimum and a maximum.
 
 The script "plotcrispr.py" is used to make the sgRNA score vs percentile plot and the input looks like 
+
     python plotcrispr.py exacresiduals/results/weightedresiduals.txt genescreens/wang.bed -s Wangetal
 First file is again the constrained regions, second file is the specific Wang et al bed file with chrom start end and CS_score and -s has you put in the study name.  A similar file can be made for the Shalem dataset and this script could also be run on that.
 
 The script "plotresiddist.py" is only for checking that the middle residuals and top residuals are where they're supposed to be after you make them if you want.  Input format is non-existent right now as the paths are hard-coded into it so
+
     python plotresiddist.py
 is plenty to run it.
 
