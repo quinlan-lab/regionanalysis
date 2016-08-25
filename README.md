@@ -43,6 +43,8 @@ The script "plotresiddist.py" is only for checking that the middle residuals and
     python plotresiddist.py
 is plenty to run it.
 
+The script "plot.py" is for making the Monte Carlo plots, and works as shown in "generateplots.sh".
+
 ##old comparison data:
 ###miRNA (TS/TargetScan file, mirna.txt):
 the higher the context score percentile, the lower the content score and the greater the fold repression of miRNA at the site
