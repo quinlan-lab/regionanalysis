@@ -8,4 +8,4 @@ tr -s "" "\n" < ogfiles/deligtetal.txt | grep -v "p.(=)" | sed '1d' | grep -v '
 
 tr -s "" "\n" < ogfiles/mcraeetal.txt | sed '1d' | cut -f 3- | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | awk '$8<.5' > denovos/mcraecontrol.bed
 
-tr -s "" "\n" < < ogfiles/mcraeetal.txt | sed '1d' | cut -f 3- | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | awk '$8>.5' > denovos/mcrae.bed
+tr -s "" "\n" < ogfiles/mcraeetal.txt | sed '1d' | cut -f 3- | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | awk '$8>.5' > denovos/mcrae.bed
