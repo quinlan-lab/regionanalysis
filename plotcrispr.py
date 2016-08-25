@@ -13,8 +13,8 @@ parser.add_argument("sgrnas")
 parser.add_argument("-s", "--study-name", help="name of your study, for plot label", required=True)
 args=parser.parse_args()
 
-regions=args.regions
-sgrnas=args.sgrnas
+regions=args.regions #exacresiduals/results/weightedresiduals.txt
+sgrnas=args.sgrnas # genescreens/wang.bed
 study_name=args.study_name
 
 import plotdistro as pltdist
@@ -35,6 +35,9 @@ yma = np.max(pct)
 print xmi,xma,ymi,yma
 
 title="CRISPR score vs Residual Percentile for "+study_name+"\n"
+'''
+this part taken from exacresiduals/resid-plot.py
+'''
 ax.plot(cs,pct,'.')
 X = {"cs": cs, "intercept": np.ones(len(pct))}
 X = pd.DataFrame(X)
@@ -45,6 +48,9 @@ results = sm.OLS(pct, X, hasconst=True).fit()
 x=[np.min(cs),np.max(cs)]
 y=[results.params['intercept'],results.params['cs']*np.max(cs)]
 ax.plot(x,y,'r-')
+'''
+end resid-plot insertion
+'''
 plt.ticklabel_format(useOffset=False)
 ax.set_xlabel("CS score")
 ax.set_ylabel("Percentile")
