@@ -5,15 +5,17 @@ from collections import OrderedDict, defaultdict
 def rank(genes):
     kbm7,raji,jiyoye,k562=defaultdict(int),defaultdict(int),defaultdict(int),defaultdict(int)
     for gene in genes:
-        for agene in genes:
-            if genes[gene][0]<genes[agene][0] and genes[gene][1] < 1e-3:
-                kbm7[gene]+=1
-            if genes[gene][2]<genes[agene][2] and genes[gene][3] < 1e-3:    
-                raji[gene]+=1
-            if genes[gene][4]<genes[agene][4] and genes[gene][5] < 1e-3:
-                jiyoye[gene]+=1
-            if genes[gene][6]<genes[agene][6] and genes[gene][7] < 1e-3:
-                k562[gene]+=1
+        if genes[gene][1] < 5e-2 and genes[gene][3] < 5e-2 and genes[gene][5] < 5e-2 and genes[gene][7] < 5e-2 and \
+            genes[gene][0] < -1e-1 and genes[gene][2] < -1e-1 and genes[gene][4] < -1e-1 and genes[gene][6] < -1e-1:
+            for agene in genes:
+                if genes[gene][0]<genes[agene][0]:
+                    kbm7[gene]+=1
+                if genes[gene][2]<genes[agene][2]:    
+                    raji[gene]+=1
+                if genes[gene][4]<genes[agene][4]:
+                    jiyoye[gene]+=1
+                if genes[gene][6]<genes[agene][6]:
+                    k562[gene]+=1
     genelist=defaultdict(int)
     for a,b,c,d in zip(kbm7,raji,jiyoye,k562):
         for e,f,g,h in zip(kbm7,raji,jiyoye,k562):
