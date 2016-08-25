@@ -26,7 +26,7 @@ The folder "plots" is pretty self-explanatory, it's where the plots from "plotcr
 
 The folder "results" is where the Monte Carlo overlap files in JSON format are stored for use by "plot.py".
 
-
+The script "generateplots.sh" calls my local version of poverlap (from https://github.com/brentp/poverlap, stored in /uufs/chpc.utah.edu/common/home/u1021864/software/poverlap/poverlap.py; it prints the simulation results for Monte Carlo shuffling which the github version does not do by default) so that "plot.py" can plot the JSON formatted results in the folder "results".
 
 ##old comparison data:
 ###miRNA (TS/TargetScan file, mirna.txt):
