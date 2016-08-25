@@ -57,11 +57,11 @@ def main():
         benign = intersect(regions,benigns,False) #sys.argv[1]='benign.bed'
         for line in benign.split("\n"):
             fields = line.strip().split("\t")
-            bentile.append(float(fields[11])) # percentile from residuals.txt
+            bentile.append(float(fields[13])) # percentile from exonicresiduals.txt [11] or weightedresiduals.txt [13]
     patho = intersect(regions,pathogenic,False) #sys.argv[2]='patho.bed'
     for line in patho.split("\n"):
         fields = line.strip().split("\t")
-        pathtile.append(float(fields[11]))
+        pathtile.append(float(fields[13]))
 
     '''
     distribution of residuals - benign vs pathogenic
@@ -123,3 +123,5 @@ def main():
     plt.tight_layout()
     plt.savefig("plots/"+study_name+str(zoom[0])+"-"+str(zoom[1])+"distribution.png")
     plt.close()
+
+main()
