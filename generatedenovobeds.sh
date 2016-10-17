@@ -1,7 +1,7 @@
 # converting Homsy files, filtering out non "D-missense variants"
-tr -s "" "\n" < ogfiles/homsy_database_S02.txt | grep -v '\t\t\t' | cut -f 2- | sed '1,2d' | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | perl -pe 's/Start\s*lost/Start lost/g' | perl -pe 's/Splice\s*site/Splice site/g' | perl -pe 's/Stop\s*lost/Stop lost/g' | grep -v -Pw 'Splice site|Synonymous' | perl -pe 's/\*.*//g' > ~/analysis/denovos/homsy.bed
+tr -s "" "\n" < ogfiles/homsy_database_S02.txt | grep -v '\t\t\t' | cut -f 2- | sed '1,2d' | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | perl -pe 's/Start\s*lost/Start lost/g' | perl -pe 's/Splice\s*site/Splice site/g' | perl -pe 's/Stop\s*lost/Stop lost/g' | grep -v -Pw 'Splice site|Synonymous' | grep -w 'D-Missense' | perl -pe 's/\*.*//g' > ~/analysis/denovos/homsy.bed
 
-tr -s "" "\n" < ogfiles/homsy_database_S03.txt | grep -v '\t\t\t' | cut -f 2- | sed '1,2d' | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | perl -pe 's/Start\s*lost/Start lost/g' | perl -pe 's/Splice\s*site/Splice site/g' | perl -pe 's/Stop\s*lost/Stop lost/g' | grep -v -Pw 'Splice site|Synonymous' | perl -pe 's/\*.*//g' > ~/analysis/denovos/homsycontrol.bed
+tr -s "" "\n" < ogfiles/homsy_database_S03.txt | grep -v '\t\t\t' | cut -f 2- | sed '1,2d' | awk '{t=$2-1} {printf $1"\t"t"\t"$2} {for (i=3; i<=NF; i++) printf "\t"$i} {print ""}' | perl -pe 's/Start\s*lost/Start lost/g' | perl -pe 's/Splice\s*site/Splice site/g' | perl -pe 's/Stop\s*lost/Stop lost/g' | grep -v -Pw 'Splice site|Synonymous' | grep -w 'D-Missense' | perl -pe 's/\*.*//g' > ~/analysis/denovos/homsycontrol.bed
 
 # converting deLigt files, filtering out synonymous variants
 tr -s "" "\n" < ogfiles/deligtetal.txt | grep -v "p.(=)" | sed '1d' | grep -v '\t\t\t\t\t\t\t\t' | cut -f 4- | sed 's/^chr//g' | grep -w -v 'NO' > ~/analysis/denovos/deligt.bed
