@@ -5,6 +5,9 @@ reload(sys)
 sys.setdefaultencoding("ISO-8859-1")
 #this script makes appropriate pathogenic and benign clinvar variant files
 
+def func(string):
+    return any([i in string for i in 'stop_gained', 'stop_lost', 'start_lost', 'initiator_codon_variant', 'rare_amino_acid_variant', 'missense_variant', 'protein_altering_variant', 'frameshift_variant'])
+
 clinvar=VCF(sys.argv[1]) #clinvar file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/clinvar-anno.vep.vcf.gz
 kcsq = clinvar["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 f1=open('benign.vcf','wb')
