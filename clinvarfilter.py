@@ -23,10 +23,10 @@ for variant in clinvar:
     for csq in (c for c in csqs if c['BIOTYPE'] == 'protein_coding'):
         if csq['Feature'] == '' or csq['EXON'] == '': continue
         if not u.isfunctional(csq): continue
-        if info['CLNSIG'] == '2' and info['CLNREVSTAT'] != 'not':
+        if info['CLNSIG'] == '2' and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']:
             f1.write(str(variant))
             break
-        if info['CLNSIG'] == '5' and info['CLNREVSTAT'] != 'not':
+        if info['CLNSIG'] == '5' and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']:
             try:
                 if info['max_aaf_all']>0.01: continue
             except:
