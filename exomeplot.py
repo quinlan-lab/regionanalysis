@@ -12,11 +12,23 @@ iterable = (i for i in it)
 for region in iterable:
     lens.append(int(region['end'])-int(region['start']))
 
-plt.hist(lens,500,facecolor='green')
+fig=plt.figure()
+ax1 = fig.add_subplot(3, 1, 1)
+ax2 = fig.add_subplot(3, 1, 2)
+ax3 = fig.add_subplot(3, 1, 3)
+ax1.hist(lens,bins=[1,2,3,4,5,6,7,8,9,10,20,50,100],facecolor='red')
+ax2.hist(lens,bins=[50,100,500],facecolor='green')
+ax3.hist(lens,bins=[500,1000,10000],facecolor='blue')
+ax1.set_ylabel('Frequency')
+ax2.set_ylabel('Frequency')
+ax3.set_ylabel('Frequency')
+ax2.set_xlim(50,500)
+ax3.set_xlim(500,max(lens))
+ax3.set_xlabel('Distance between functional variants')
 plt.savefig('funchist.png',bbox_inches='tight')
 
 totlen=0.0; ordered=[]; exomecov=[]; wgtdpct=[]
-it = ts.reader(sys.argv[2]) #$HOME/analysis/exacresiduals/results/2016_12_10/weightedresiduals.txt (sorted by weighted_pct)
+it = ts.reader(sys.argv[2]) #$HOME/analysis/exacresiduals/results/2016_12_10/weightedresiduals.txt
 iterable = (i for i in it)
 for region in iterable:
     length=int(region['end'])-int(region['start'])
@@ -34,4 +46,6 @@ for region in ordered:
     prevvalues=(length/totlen,region[1])
 plt.figure()
 plt.plot(wgtdpct,exomecov)
+plt.xlabel('CCR Percentile (highest = most constrained)')
+plt.ylabel('Proportion of exome covered in total')
 plt.savefig('exomecov.png',bbox_inches='tight')
