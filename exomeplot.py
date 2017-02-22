@@ -2,33 +2,39 @@ import sys
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter
+from matplotlib import font_manager
 import seaborn as sns
 import numpy as np
 import toolshed as ts
 
 lens=[]
-it = ts.reader(sys.argv[1]) #$HOME/analysis/exacresiduals/results/2016_12_10/unfilteredresiduals.txt
+it = ts.reader('$HOME/analysis/exacresiduals/results/2016_12_10/unfilteredresiduals.txt')
 iterable = (i for i in it)
 for region in iterable:
     lens.append(int(region['end'])-int(region['start']))
 
 fig=plt.figure()
-ax1 = fig.add_subplot(3, 1, 1)
-ax2 = fig.add_subplot(3, 1, 2)
-ax3 = fig.add_subplot(3, 1, 3)
-ax1.hist(lens,bins=[1,2,3,4,5,6,7,8,9,10,20,50,100],facecolor='red')
-ax2.hist(lens,bins=[50,100,500],facecolor='green')
-ax3.hist(lens,bins=[500,1000,10000],facecolor='blue')
-ax1.set_ylabel('Frequency')
-ax2.set_ylabel('Frequency')
-ax3.set_ylabel('Frequency')
-ax2.set_xlim(50,500)
-ax3.set_xlim(500,max(lens))
-ax3.set_xlabel('Distance between functional variants')
-plt.savefig('funchist.png',bbox_inches='tight')
+ax1 = fig.add_subplot(1, 1, 1)
+mi=0; ma = max(lens); rng = (mi,ma)
+p,p_edges=np.histogram(lens, bins=40, range=rng)
+p=map(lambda x: float(x)/sum(p), p)
+width_p = (p_edges[1]-p_edges[0])
+ax1.bar(p_edges[:-1], p, width = width_p, color = 'r', log = True)
+ax1.set_xlim(0,max(lens))
+ax1.xaxis.set_ticks(p_edges)#[1::2])
+labs=ax1.xaxis.set_ticklabels(p_edges, rotation=45, ha='right', fontname='Cmr10')
+ax1.xaxis.set_major_formatter(FormatStrFormatter('${%.0f}$'))
+ticks=ax1.get_yticks()
+ax1.yaxis.set_ticklabels(['{:f}%'.format(x*100) for x in ticks], fontname='Cmr10')
+fig.tight_layout()
+#ax1.set_xscale('symlog',basex=2)
+ax1.set_ylabel('Proportion of regions represented')
+ax1.set_xlabel('Distance between functional variants')
+plt.savefig('funchist.pdf', format='pdf', bbox_inches='tight')
 
 totlen=0.0; ordered=[]; exomecov=[]; wgtdpct=[]
-it = ts.reader(sys.argv[2]) #$HOME/analysis/exacresiduals/results/2016_12_10/weightedresiduals.txt
+it = ts.reader('$HOME/analysis/exacresiduals/results/2016_12_10/weightedresiduals.txt')
 iterable = (i for i in it)
 for region in iterable:
     length=int(region['end'])-int(region['start'])
