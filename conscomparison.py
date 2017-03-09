@@ -15,13 +15,22 @@ from collections import defaultdict
 #import cProfile
 
 def read_values(path='/uufs/chpc.utah.edu/common/home/u1021864/analysis/scoredregions.bed'):
-    ccrs=defaultdict(list)
+    var=defaultdict(defaultdict)
+    ccrs=defaultdict(list); genes=defaultdict(list)
     for i, region in enumerate(ts.reader(path, header="ordered")):
         ccrs['gerp'].append(np.mean(map(float,region['GERP'].split(","))))
         ccrs['phast'].append(np.mean(map(float,region['phastCons'].split(","))))
         ccrs['cadd'].append(np.mean(map(float,region['CADD'].split(","))))
-        ccrs['pct'].append(float(region['weighted_pct'])); ccrs['gene'].append(region['gene']); ccrs['chrom'].append(region['chrom']); ccrs['ranges'].append(region['ranges']); ccrs['length'].append(sum([int(i.split("-")[1])-int(i.split("-")[0]) for i in region['ranges'].split(',')]))
-    return ccrs
+        length=sum([int(i.split("-")[1])-int(i.split("-")[0]) for i in region['ranges'].split(',')])
+        ccrs['pct'].append(float(region['weighted_pct'])); ccrs['gene'].append(region['gene']); ccrs['chrom'].append(region['chrom']); ccrs['ranges'].append(region['ranges']); ccrs['length'].append(length)
+        if genes[region['gene']]:
+            genes[region['gene']][0]+=1
+            genes[region['gene']][1]+=length
+        else:
+            genes[region['gene']]=[1,length]
+    var['ccrs']=ccrs
+    var['genes']=genes
+    return var
 
 def barplot(dataset):
     mi,ma=np.nanmin(dataset),np.nanmax(dataset)
@@ -42,12 +51,13 @@ def clinvar(path='patho.vcf'):
     return genes
 
 
-if not os.path.isfile("ccrs.pickle"):
-    ccrs=read_values('scoredregions.bed')
+if not os.path.isfile("var.pickle"):
+    var=read_values('scoredregions.bed')
     #clingenes=clinvar('patho.vcf') #patho.vcf, vcf file after clinvarfilter.py for pathogenic variants
-    pickle.dump(ccrs, open("ccrs.pickle", "wb"))
+    pickle.dump(var, open("var.pickle", "wb"))
 
-ccrs = pickle.load(open("ccrs.pickle", "rb"))
+var = pickle.load(open("var.pickle", "rb"))
+ccrs = var['ccrs']; genes = var['genes']
 gerp=ccrs['gerp']; phast=ccrs['phast']; cadd=ccrs['cadd']; ccrpct=ccrs['pct']
 toptengerp,toptenphast,toptencadd,topgerp,topphast,topcadd=[],[],[],[],[],[]
 for region in ccrs:
@@ -64,6 +74,38 @@ meangerp=np.nanmean(gerp)
 meanphast=np.nanmean(phast)
 meancadd=np.nanmean(cadd)
 meanccr=np.nanmean(ccrpct)
+
+prop=[]
+f1=open('geneexlength.txt', 'r') #sed 's/\"//g' exacresiduals/flatexome.bed | sed 's/;//g' | awk '{a[$4]+=($3-$2)} END {for (i in a) print i"\t"a[i]}' > geneexlength.txt
+for line in f1:
+    line=line.strip().split('\t')
+    if line[0] in genes.keys():
+        genes[line[0]].append(line[1])
+        
+    
+f, ax = plt.subplots()
+for i in genes:
+    nums=genes[i]
+    if nums[0]/float(nums[2])>.26:
+        print i, nums
+    prop.append(nums[0]/float(nums[2]))
+mi=0; ma = max(prop); rng = (mi,ma)
+p,p_edges=np.histogram(prop, bins=40, range=rng) #bins=400
+p=map(lambda x: float(x)/sum(p), p)
+width_p = (p_edges[1]-p_edges[0])
+ax.bar(p_edges[:-1], p, width = width_p, color = 'r', log = True)
+ax.xaxis.set_ticks(p_edges)#[1::2])
+#ax1.set_xlim(0,115)
+labs=ax.xaxis.set_ticklabels(p_edges, rotation=45, ha='right', fontname='Cmr10')
+ticks=ax.get_xticks()
+ax.xaxis.set_ticklabels(['{:.1f}%'.format(x*100) for x in ticks], fontname='Cmr10')
+ticks=ax.get_yticks()
+ax.yaxis.set_ticklabels(['{:f}%'.format(x*100) for x in ticks], fontname='Cmr10')
+ax.set_xlabel('Number of regions in gene/size of gene')
+ax.set_ylabel('Proportion of genes in bin')
+plt.tight_layout()
+plt.savefig('geneproportions.pdf', bbox_inches='tight')
+
 def positive_selection(ccrs):
     key=None;gerpsum=0;phastsum=0;caddsum=0;gerpgene=set();phastgene=set();caddgene=set();
     for i in range(0,len(ccrs['pct'])):

@@ -4,6 +4,7 @@ date=2016_12_10
 rm intersects.txt
 #create top 1% gene list, 5%, 10% etc.
 cut -f 4 <(awk -v t=$top 'BEGIN {top=100-t} {if ($12>top) print}' exacresiduals/results/$date/weightedresiduals.txt) | sed '1d' | sort | uniq | awk '{split($1,a,","); for (i in a) print a[i];}' > /tmp/resids
+wc -l /tmp/resids
 #compare top gene list to an essential genescreen file of some kind
 echo "ClinGen	total" >> intersects.txt
 wc -l genescreens/clingen_level3_genes_2015_02_27.tsv >> intersects.txt
