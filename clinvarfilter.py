@@ -6,20 +6,28 @@ sys.setdefaultencoding("ISO-8859-1")
 import argparse
 
 parser=argparse.ArgumentParser()
-parser.add_argument("-d", "--dominant", help="dominant genes only", action="store_true", default=False)
-parser.add_argument("-f", "--files", help="clinvar file, then dominant genes file, if necessary", nargs="*")
-parser.set_defaults(files = ['/scratch/ucgd/lustre/u1021864/serial/clinvar-vt-anno-vep.vcf.gz','genescreens/ad_genecards_clean.txt'])
+parser.add_argument("-c", "--clinvar", help="clinvar file")
+parser.add_argument("-i", "--haploinsufficient", help="clingen dosage haplosufficiency 3 genes file, if necessary") #-h overlaps help
+parser.add_argument("-d", "--dominant", help="dominant genes file, if necessary")
+#parser.set_defaults(clinvar = '/scratch/ucgd/lustre/u1021864/serial/clinvar-vt-anno-vep.vcf.gz')
+#parser.set_defaults(dominant = 'genescreens/ad_genecards_clean.txt')
+#parser.set_defaults(haploinsufficient = 'genescreens/clingen_level3_genes_2015_02_27.tsv')
 args=parser.parse_args()
 dom=args.dominant
-files=args.files
+clinvar=args.clinvar
+haplo=args.haploinsufficient
 
 #this script makes appropriate pathogenic and benign clinvar variant files
 
-clinvar=VCF(args.files[0]) #clinvar file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/clinvar-vt-anno-vep.vcf.gz
+clinvar=VCF(clinvar) #clinvar file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/clinvar-vt-anno-vep.vcf.gz
 if dom:
     dom_genes = {} # since our model best represents dominant negative phenotypes, we are only interested in autosomal dominant genes here (from genecards)
-    for line in open(args.files[1]): #genescreens/ad_genecards_clean.txt
+    for line in open(dom): #genescreens/ad_genecards_clean.txt
         dom_genes[line.strip()] = 1
+if haplo:
+    haplo_genes = {} # since our model best represents dominant negative and haploinsufficient phenotypes, here we incorporate ClinGen 3 genes
+    for line in open(haplo): #genescreens/clingen_level3_genes_2015_02_27.tsv
+        haplo_genes[line.strip()] = 1
 kcsq = clinvar["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 f1=open('benign.vcf','wb')
 f2=open('patho.vcf','wb')
@@ -43,8 +51,8 @@ for variant in clinvar:
             if gene_raw is not None:
                 gene = gene_raw.split(':')[0] 
             if exac_af is None and variant.CHROM != 'X' and variant.CHROM != 'Y':
-                if dom:
-                    if gene in dom_genes:
+                if dom or haplo:
+                    if gene in dom_genes: #or gene in haplo_genes:
             #try:
             #    if info['max_aaf_all']>0.01: continue
             #except:
