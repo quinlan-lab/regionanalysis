@@ -20,7 +20,7 @@ def readccrs(path, gerp, phast, cadd):
         d['phast'] = ",".join(map(str,phast.values("chr" + d['chrom'], int(d['start']), int(d['end']))))
         region=d['chrom']+":"+d['start']+"-"+d['end']
         var=None;vals=[];caddvals=[]
-        for toks in (x.rstrip('\r\n').split("\t") for x in ts.nopen("| tabix " + cadd + " {region}".format(region=region)) if x[0] != "#"):
+        for toks in (x.rstrip('\r\n').split("\t") for x in ts.nopen("| tabix " + cadd + " {region}".format(region=region)) if x[1] != "#"): #TODO replace w cyvcf2
             if var==None or var==toks[1]:
                 vals.append(float(toks[5]))
             elif var!=toks[1] and var!=None:
@@ -34,7 +34,7 @@ def readccrs(path, gerp, phast, cadd):
 
 path = '/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
 gerp = pyBigWig.open(path)
-path = '/scratch/ucgd/lustre/u1021864/serial/hg19.100way.phastCons.bw'
+path = '/scratch/ucgd/lustre/u1021864/serial/hg19.46way.phastCons.bw'
 phast = pyBigWig.open(path)
 path = '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/results/2016_12_10/weightedresiduals.txt'
 cadd = '/scratch/ucgd/lustre/u1021864/serial/whole_genome_SNVs.tsv.gz'
