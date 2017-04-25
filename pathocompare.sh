@@ -66,7 +66,7 @@ bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | 
 bedtools intersect -a rvis.bed -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 5 > tmp/rvispatho
 bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
 
-bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/mcrae-exac.vcf | cut -f 14 > tmp/mcraepatho
+bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/mcrae-patho-exac.vcf | cut -f 14 > tmp/mcraepatho
 
 python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz 2>/dev/null #2>/dev/null is because the phred score is in the filter column # don't forget to switch gnomad for exac and vice-versa
 
