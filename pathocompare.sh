@@ -10,10 +10,10 @@
 #first run bash clinvarmake.sh if the clinvar file below is not yet generated
 TITLE=$1
 
-python varfilter.py -x $DATA/clinvar-vt-anno-vep.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
-python varfilter.py -x $DATA/clinvar-vt-anno-vep.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
-python varfilter.py -x $DATA/clinvar-vt-anno-vep.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
-python varfilter.py -x $DATA/clinvar-vt-anno-vep.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 
 #exac
 cat <(grep '^#' clinvar-benign-exac.vcf) <(grep -v '^#' clinvar-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > clinvar-benign-exac.vcf.gz; tabix clinvar-benign-exac.vcf.gz
