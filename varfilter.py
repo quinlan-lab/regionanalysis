@@ -4,6 +4,7 @@ import exacresiduals.utils as u
 reload(sys)
 sys.setdefaultencoding("ISO-8859-1")
 import argparse
+import os
 
 parser=argparse.ArgumentParser()
 parser.add_argument("-x", "--variant", help="variant file")
@@ -54,14 +55,14 @@ if rec:
     for line in open(rec): #genescreens/clingen_level3_genes_2015_02_27.tsv
         rec_genes.add(line.strip())
 
-variants=VCF(variants) #variants file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/variants-vt-anno-vep.vcf.gz
-
-f=open(name+'-'+varstatus+'-'+exacver+'.vcf','wb')
+folder=os.path.dirname(variants)
+f=open(folder+'/'+name+'-'+varstatus+'-'+exacver+'.vcf','wb')
+variants=VCF(variants) #variants file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/clinvar_20170104-vep-anno-vt.vcf.gz
 header=variants.raw_header
-kcsq = variants["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 f.write(header)
 
 gene = ''
+kcsq = variants["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 
 for variant in variants:
     info = variant.INFO

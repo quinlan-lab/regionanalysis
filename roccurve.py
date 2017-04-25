@@ -83,10 +83,10 @@ b=open(rvis[1],'r') #benign rvis
 y=[]; scores=[]
 for line in p:
     y.append(1)
-    scores.append(float(line))
+    scores.append(100-float(line))
 for line in b:
     y.append(0)
-    scores.append(float(line))
+    scores.append(100-float(line))
 y=np.array(y); scores=np.array(scores)
 fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
 AUC=metrics.roc_auc_score(y, scores)
