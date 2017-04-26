@@ -16,7 +16,6 @@ parser.add_argument("-n", "--name", help="clinvar, mcrae, etc.")
 parser.add_argument("-r", "--recessive", help="recessive genes file, if necessary")
 parser.add_argument("-c", "--clinvar", help="working with clinvar data", action="store_true")
 parser.add_argument("-s", "--status", help="variant status: benign or patho, type one of the two exactly")
-parser.add_argument("-g", "--gnomad", help="generate benigns from non-exac gnomad variants", action="store_true")
 #parser.set_defaults(variants = '/scratch/ucgd/lustre/u1021864/serial/variants-vep-anno-vt.vcf.gz')
 #parser.set_defaults(dominant = 'genescreens/ad_genecards_clean.txt')
 #parser.set_defaults(recessive = 'genescreens/ar_genecards_clean.txt')
@@ -31,8 +30,6 @@ filter=args.filter
 name=args.name
 clinvar=args.clinvar
 varstatus=args.status
-gnomad=args.gnomad
-
 
 def cfilter(info, varstatus):
     if varstatus=="benign":
@@ -78,8 +75,11 @@ for variant in variants:
 #    if info['CLNSIG'] == '2' and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']:
 #        f1.write(str(variant))
 #        continue
-    exac_af = variant.INFO.get('ac_exac_all')
     gene_raw = variant.INFO.get('GENEINFO')
+    if exacver=="gnomad":
+        exac_af = variant.INFO.get('ac_gnomad_all')
+    elif exacver=="exac":
+        exac_af = variant.INFO.get('ac_exac_all')
     try:
         csqs = [dict(zip(kcsq, c.split("|"))) for c in info['CSQ'].split(",")]
     except KeyError:
