@@ -1,5 +1,14 @@
 #for generating ladder plots and ROC curves
 #first run bash clinvarmake.sh if the clinvar file below is not yet generated
+
+if [ ! -s $DATA/clinvar_20170104-vep-anno-vt.vcf.gz ]; then
+    bash varmake.sh clinvar_20170104.vcf.gz
+fi
+
+if [ ! -s $DATA/gnomad-vep-anno-vt.vcf.gz ]; then
+    bash varmake.sh gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz
+fi
+
 while getopts ":t:gc" opt; do
     case $opt in
         t)
@@ -33,7 +42,6 @@ while getopts ":t:gc" opt; do
     esac
 done
 
-
 python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
@@ -60,7 +68,7 @@ if [ ! -s rvis.bed ]; then
     awk 'FNR==NR{genes[$1]=$2; next} {for (gene in genes) if (gene == $4) print $0, genes[gene]}' FS='\t' OFS='\t' tmp/RVIS_exac.txt tmp/Homo_sapiens37.bed > rvis.bed
 fi
 
-if [ ! -s denovos/mcrae.vcf.gz ]; then
+if [ ! -s $DATA/mcrae-vep-anno-vt.vcf.gz ]; then
     cat vcfheader <(sed '1,2d' denovos/mcrae.bed | awk '{print $1,$3,".",$4,$5,".","PASS","GENEINFO=" $6 ";"}' OFS="\t" | sort -k1,1 -k2,2n) | bgzip -c > denovos/mcrae.vcf.gz; tabix denovos/mcrae.vcf.gz
     bash varmake.sh denovos/mcrae.vcf.gz
     python varfilter.py -x $DATA/mcrae-vep-anno-vt.vcf.gz -e exac -f -n mcrae -s patho
