@@ -63,6 +63,11 @@ kcsq = variants["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 
 for variant in variants:
     info = variant.INFO
+    if prevpos == v.POS:
+        idx+=1
+    else:
+        idx=0
+        prevpos = v.POS
     gene_raw = variant.INFO.get('GENEINFO')
     if gene_raw is not None:
         gene = gene_raw.split(':')[0]
@@ -76,10 +81,10 @@ for variant in variants:
 #        f1.write(str(variant))
 #        continue
     gene_raw = variant.INFO.get('GENEINFO')
-    if exacver=="gnomad":
-        exac_af = variant.INFO.get('ac_gnomad_all')
-    elif exacver=="exac":
-        exac_af = variant.INFO.get('ac_exac_all')
+    gnomad_af = variant.INFO.get('ac_gnomad_all')
+    gnomad_filter = variant.INFO.get('gnomad_filter')
+    exac_af = variant.INFO.get('ac_exac_all')
+    exac_filter = variant.INFO.get('exac_filter')
     try:
         csqs = [dict(zip(kcsq, c.split("|"))) for c in info['CSQ'].split(",")]
     except KeyError:
@@ -87,18 +92,45 @@ for variant in variants:
     for csq in (c for c in csqs if c['BIOTYPE'] == 'protein_coding'):
         if csq['Feature'] == '' or csq['EXON'] == '': continue
         if not u.isfunctional(csq): continue
-        if varstatus == "benign":
+        if "benign" in varstatus and "clinvar" in name:
             f.write(str(variant))
             break
+        exac_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['gnomad_csq'].split(",")]
+        gnomad_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['exac_csq'].split(",")]
         if gene_raw is not None:
-            gene = gene_raw.split(':')[0] 
+            gene = gene_raw.split(':')[0]
             if filter:
-                if exac_af is None and variant.CHROM != 'X' and variant.CHROM != 'Y':
-                #try:
-                    #if info['max_aaf_all']>0.01: continue
-                #except:
-                #    pass
-                    f.write(str(variant))
+                if "exac" in exacver:
+                    if exac_af is not None and (exac_filter is None or exac_filter in ["PASS", "SEGDUP", "LCR"]):
+                        for csq2 in exac_csqs:
+                            if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
+                                continue
+                    if "gnomad" in name:
+                        try:
+                            as_filter=info['AS_FilterStatus'].split(",")[idx]
+                            if as_filter not in ["PASS", "SEGDUP", "LCR"] :
+                                continue
+                        except KeyError:
+                            pass
+                    if variant.CHROM != 'X' and variant.CHROM != 'Y':
+                    #try:
+                        #if info['max_aaf_all']>0.01: continue
+                    #except:
+                    #    pass
+                        f.write(str(variant))
+                elif "gnomad" in exacver:
+                    try:
+                        as_filter=info['gnomad_filterstatus'].split(",")[idx]
+                        if as_filter not in ["PASS", "SEGDUP", "LCR"] :
+                            continue
+                    except KeyError:
+                        pass
+                    if gnomad_af is not None and (gnomad_filter is None or gnomad_filter in ["PASS", "SEGDUP", "LCR"]) and (as_filter in ["PASS", "SEGDUP", "LCR"]):
+                        for csq2 in gnomad_csqs:
+                            if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
+                                continue
+                    if variant.CHROM != 'X' and variant.CHROM != 'Y':
+                        f.write(str(variant))
             else:
                 f.write(str(variant))
         break

@@ -6,7 +6,9 @@ if [ ! -s $DATA/clinvar_20170104-vep-anno-vt.vcf.gz ]; then
 fi
 
 if [ ! -s $DATA/gnomad-vep-anno-vt.vcf.gz ]; then
-    bash varmake.sh gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz
+    bash varmake.sh gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz exac # doesn't annotate gnomad with gnomad
+
+#    bedtools intersect -v -a $DATA/gnomad-vep-anno-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz > $DATA/gnomad-noexac.vcf; bgzip $DATA/gnomad-noexac.vcf -c > $DATA/gnomad-noexac.vcf.gz; tabix $DATA/gnomad-noexac.vcf.gz
 fi
 
 while getopts ":t:gc" opt; do
@@ -17,11 +19,13 @@ while getopts ":t:gc" opt; do
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -f -n gnomad -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+            bedtools intersect -v -b exacresiduals/data/ExAC.r1.vt.vep.vcf.gz -a exacresiduals/data/gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz 
+            python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -e exac -f -n gnomad -s benign # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 
             #exac
-            cat <(grep '^#' $DATA/clinvar-benign-exac.vcf) <(grep -v '^#' $DATA/clinvar-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-exac.vcf.gz; tabix $DATA/clinvar-benign-exac.vcf.gz
-            bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
+            cat <(grep '^#' $DATA/gnomad-benign-exac.vcf) <(grep -v '^#' $DATA/gnomad-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/gnomad-benign-exac.vcf.gz; tabix $DATA/gnomad-benign-exac.vcf.gz
+            #bedtools intersect -a $DATA/gnomad-benign-exac.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -v > $DATA/gnomadbenigns.vcf.gz
+            bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
             ;;
         c)
             echo "-clinvar input triggered" >&2
