@@ -61,13 +61,14 @@ f.write(header)
 gene = ''
 kcsq = variants["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 
+prevpos=-1; idx=0
 for variant in variants:
     info = variant.INFO
-    if prevpos == v.POS:
+    if prevpos == variant.POS:
         idx+=1
     else:
         idx=0
-        prevpos = v.POS
+        prevpos = variant.POS
     gene_raw = variant.INFO.get('GENEINFO')
     if gene_raw is not None:
         gene = gene_raw.split(':')[0]
@@ -95,8 +96,11 @@ for variant in variants:
         if "benign" in varstatus and "clinvar" in name:
             f.write(str(variant))
             break
-        exac_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['gnomad_csq'].split(",")]
-        gnomad_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['exac_csq'].split(",")]
+        try:
+            exac_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['exac_csq'].split(",")]
+            gnomad_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['gnomad_csq'].split(",")]
+        except KeyError:
+            pass
         if gene_raw is not None:
             gene = gene_raw.split(':')[0]
             if filter:
@@ -108,7 +112,7 @@ for variant in variants:
                     if "gnomad" in name:
                         try:
                             as_filter=info['AS_FilterStatus'].split(",")[idx]
-                            if as_filter not in ["PASS", "SEGDUP", "LCR"] :
+                            if as_filter not in ["PASS", "SEGDUP", "LCR"]:
                                 continue
                         except KeyError:
                             pass
@@ -120,12 +124,12 @@ for variant in variants:
                         f.write(str(variant))
                 elif "gnomad" in exacver:
                     try:
-                        as_filter=info['gnomad_filterstatus'].split(",")[idx]
-                        if as_filter not in ["PASS", "SEGDUP", "LCR"] :
-                            continue
+                        for filt in info['gnomad_filterstatus'].split(","):
+                            if filt not in ["PASS", "SEGDUP", "LCR"]:
+                                continue
                     except KeyError:
                         pass
-                    if gnomad_af is not None and (gnomad_filter is None or gnomad_filter in ["PASS", "SEGDUP", "LCR"]) and (as_filter in ["PASS", "SEGDUP", "LCR"]):
+                    if gnomad_af is not None and (gnomad_filter is None or gnomad_filter in ["PASS", "SEGDUP", "LCR"]):
                         for csq2 in gnomad_csqs:
                             if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
                                 continue
