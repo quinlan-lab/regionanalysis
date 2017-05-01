@@ -86,13 +86,23 @@ for variant in variants:
     gnomad_filter = variant.INFO.get('gnomad_filter')
     exac_af = variant.INFO.get('ac_exac_all')
     exac_filter = variant.INFO.get('exac_filter')
+    alt = variant.ALT[0]
     try:
         csqs = [dict(zip(kcsq, c.split("|"))) for c in info['CSQ'].split(",")]
     except KeyError:
         continue
+    cct=0
+    if "gnomad" in name:
+        try:
+            as_filter=info['AS_FilterStatus'].split(",")[idx]
+            if as_filter not in ["PASS", "SEGDUP", "LCR"]:
+                continue
+        except KeyError:
+            pass
     for csq in (c for c in csqs if c['BIOTYPE'] == 'protein_coding'):
         if csq['Feature'] == '' or csq['EXON'] == '': continue
         if not u.isfunctional(csq): continue
+        cct+=1
         if "benign" in varstatus and "clinvar" in name:
             f.write(str(variant))
             break
@@ -108,33 +118,26 @@ for variant in variants:
                     if exac_af is not None and (exac_filter is None or exac_filter in ["PASS", "SEGDUP", "LCR"]):
                         for csq2 in exac_csqs:
                             if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
-                                continue
-                    if "gnomad" in name:
-                        try:
-                            as_filter=info['AS_FilterStatus'].split(",")[idx]
-                            if as_filter not in ["PASS", "SEGDUP", "LCR"]:
-                                continue
-                        except KeyError:
-                            pass
-                    if variant.CHROM != 'X' and variant.CHROM != 'Y':
+                                cct=0
+                                break
                     #try:
                         #if info['max_aaf_all']>0.01: continue
                     #except:
                     #    pass
-                        f.write(str(variant))
                 elif "gnomad" in exacver:
                     try:
-                        for filt in info['gnomad_filterstatus'].split(","):
-                            if filt not in ["PASS", "SEGDUP", "LCR"]:
+                        alts=[j for i in info['gnomad_oldmultiallelic'].split(",") for j in i.split("/")[1:]]
+                        if alt in alts:
+                            altind=alts.index(alt)
+                            if info['gnomad_filterstatus'].split(",")[altind] not in ["PASS", "SEGDUP", "LCR"]:
+                                cct=-1
                                 continue
                     except KeyError:
                         pass
                     if gnomad_af is not None and (gnomad_filter is None or gnomad_filter in ["PASS", "SEGDUP", "LCR"]):
                         for csq2 in gnomad_csqs:
                             if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
-                                continue
-                    if variant.CHROM != 'X' and variant.CHROM != 'Y':
-                        f.write(str(variant))
-            else:
-                f.write(str(variant))
-        break
+                                cct=0
+                                break
+    if variant.CHROM != 'X' and variant.CHROM != 'Y' and cct!=0:
+        f.write(str(variant))

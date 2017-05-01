@@ -2,11 +2,11 @@
 #first run bash clinvarmake.sh if the clinvar file below is not yet generated
 
 if [ ! -s $DATA/clinvar_20170104-vep-anno-vt.vcf.gz ]; then
-    bash varmake.sh clinvar_20170104.vcf.gz
+    bash varmake.sh $DATA/clinvar_20170104.vcf.gz
 fi
 
 if [ ! -s $DATA/gnomad-vep-anno-vt.vcf.gz ]; then
-    bash varmake.sh gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz exac # doesn't annotate gnomad with gnomad
+    bash varmake.sh $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz exac # doesn't annotate gnomad with gnomad
 
 #    bedtools intersect -v -a $DATA/gnomad-vep-anno-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz > $DATA/gnomad-noexac.vcf; bgzip $DATA/gnomad-noexac.vcf -c > $DATA/gnomad-noexac.vcf.gz; tabix $DATA/gnomad-noexac.vcf.gz
 fi
@@ -19,8 +19,7 @@ while getopts ":t:gc" opt; do
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            bedtools intersect -v -b exacresiduals/data/ExAC.r1.vt.vep.vcf.gz -a exacresiduals/data/gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz 
-            python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -e exac -f -n gnomad -s benign # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+            python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -d ogfiles/all_ad.tsv -e exac -f -n gnomad -s benign # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 
             #exac
             cat <(grep '^#' $DATA/gnomad-benign-exac.vcf) <(grep -v '^#' $DATA/gnomad-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/gnomad-benign-exac.vcf.gz; tabix $DATA/gnomad-benign-exac.vcf.gz
