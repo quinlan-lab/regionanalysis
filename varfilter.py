@@ -52,8 +52,10 @@ if rec:
     for line in open(rec): #genescreens/clingen_level3_genes_2015_02_27.tsv
         rec_genes.add(line.strip())
 
-folder=os.path.dirname(variants)
-f=open(folder+'/'+name+'-'+varstatus+'-'+exacver+'.vcf','wb')
+folder=os.path.dirname(variants)+'/'
+if folder == '/':
+    folder = ''
+f=open(folder+name+'-'+varstatus+'-'+exacver+'.vcf','wb')
 variants=VCF(variants) #variants file, vcfanno'd and vep'd: /scratch/ucgd/lustre/u1021864/serial/clinvar_20170104-vep-anno-vt.vcf.gz
 header=variants.raw_header
 f.write(header)
@@ -69,19 +71,9 @@ for variant in variants:
     else:
         idx=0
         prevpos = variant.POS
-    gene_raw = variant.INFO.get('GENEINFO')
-    if gene_raw is not None:
-        gene = gene_raw.split(':')[0]
-    if dom or haplo or rec:
-        if gene not in dom_genes or haplo_genes or rec_genes:
-            continue
     if clinvar:
         if not cfilter(info, varstatus):
             continue
-#    if info['CLNSIG'] == '2' and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']:
-#        f1.write(str(variant))
-#        continue
-    gene_raw = variant.INFO.get('GENEINFO')
     gnomad_af = variant.INFO.get('ac_gnomad_all')
     gnomad_filter = variant.INFO.get('gnomad_filter')
     exac_af = variant.INFO.get('ac_exac_all')
@@ -94,8 +86,8 @@ for variant in variants:
     cct=0
     if "gnomad" in name:
         try:
-            as_filter=info['AS_FilterStatus'].split(",")[idx]
-            if as_filter not in ["PASS", "SEGDUP", "LCR"]:
+            if info['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
+                cct=-1
                 continue
         except KeyError:
             pass
@@ -103,6 +95,11 @@ for variant in variants:
         if csq['Feature'] == '' or csq['EXON'] == '': continue
         if not u.isfunctional(csq): continue
         cct+=1
+        gene = csq['SYMBOL']
+        if dom or haplo or rec:
+            if gene not in dom_genes or haplo_genes or rec_genes:
+                cct-=1
+                continue
         if "benign" in varstatus and "clinvar" in name:
             f.write(str(variant))
             break
@@ -111,8 +108,7 @@ for variant in variants:
             gnomad_csqs = [dict(zip(kcsq, c.split("|"))) for c in info['gnomad_csq'].split(",")]
         except KeyError:
             pass
-        if gene_raw is not None:
-            gene = gene_raw.split(':')[0]
+        if gene is not None:
             if filter:
                 if "exac" in exacver:
                     if exac_af is not None and (exac_filter is None or exac_filter in ["PASS", "SEGDUP", "LCR"]):
@@ -126,10 +122,11 @@ for variant in variants:
                     #    pass
                 elif "gnomad" in exacver:
                     try:
+                    # add fix here to pull in alts from gnomad, not oldmultiallelic
                         alts=[j for i in info['gnomad_oldmultiallelic'].split(",") for j in i.split("/")[1:]]
                         if alt in alts:
                             altind=alts.index(alt)
-                            if info['gnomad_filterstatus'].split(",")[altind] not in ["PASS", "SEGDUP", "LCR"]:
+                            if info['gnomad_filterstatus'].split(",")[altind] in ["PASS", "SEGDUP", "LCR"]:
                                 cct=-1
                                 continue
                     except KeyError:
@@ -139,5 +136,7 @@ for variant in variants:
                             if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
                                 cct=0
                                 break
+    if variant.POS == 949395:
+        print variant
     if variant.CHROM != 'X' and variant.CHROM != 'Y' and cct!=0:
         f.write(str(variant))
