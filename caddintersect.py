@@ -11,19 +11,21 @@ parser.add_argument("-c", "--cadd", help="cadd file, then cadd indel file")
 parser.set_defaults(cadd = '/scratch/ucgd/lustre/u1021864/serial/CADD.vcf.gz')
 parser.add_argument("-d", "--caddindels", help="cadd indel file")
 parser.set_defaults(caddindels = '/scratch/ucgd/lustre/u1021864/serial/CADDindels.vcf.gz')
+parser.add_argument("-f", "--files", nargs=2, help="output file locations")
 args=parser.parse_args()
 patho=args.pathogenic
 benign=args.benign
 cadd=args.cadd
 caddindels=args.caddindels
+files=args.files
 
 cadd = VCF(cadd)
 caddindels = VCF(caddindels)
 patho = VCF(patho)
 benign = VCF(benign)
 
-f1=open('tmp/caddpatho', 'w')
-f2=open('tmp/caddbenign', 'w')
+f1=open(files[0], 'w')
+f2=open(files[1], 'w')
 
 for var in patho:
     position=var.CHROM+":"+str(var.POS)+"-"+str(var.POS)
