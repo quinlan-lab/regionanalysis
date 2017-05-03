@@ -6,7 +6,7 @@ if [ ! -s $DATA/clinvar_20170104-vep-anno-vt.vcf.gz ]; then
 fi
 
 if [ ! -s $DATA/gnomad-vep-anno-vt.vcf.gz ]; then
-    bash varmake.sh $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf.gz exac # doesn't annotate gnomad with gnomad
+    bash varmake.sh $DATA/gnomad.exomes.r2.0.1.sites.vcf.gz exac # doesn't annotate gnomad with gnomad
 
 #    bedtools intersect -v -a $DATA/gnomad-vep-anno-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz > $DATA/gnomad-noexac.vcf; bgzip $DATA/gnomad-noexac.vcf -c > $DATA/gnomad-noexac.vcf.gz; tabix $DATA/gnomad-noexac.vcf.gz
 fi
@@ -14,17 +14,19 @@ fi
 while getopts ":t:gc" opt; do
     case $opt in
         t)
-            echo "-title was triggered, input: $OPTARG" >&2
-            TITLE=$OPTARG
+            TITLE+=("$OPTARG")
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -d ogfiles/all_ad.tsv -e exac -f -n gnomad -s benign # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
+            python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -e exac -f -n gnomad -s benign -d genescreens/ad_genecards_clean.txt #ogfiles/all_ad.tsv # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 
             #exac
             cat <(grep '^#' $DATA/gnomad-benign-exac.vcf) <(grep -v '^#' $DATA/gnomad-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/gnomad-benign-exac.vcf.gz; tabix $DATA/gnomad-benign-exac.vcf.gz
             #bedtools intersect -a $DATA/gnomad-benign-exac.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -v > $DATA/gnomadbenigns.vcf.gz
             bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
+            python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
+            bedtools intersect -a rvis.bed -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
+            bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
             ;;
         c)
             echo "-clinvar input triggered" >&2
@@ -33,6 +35,9 @@ while getopts ":t:gc" opt; do
             #exac
             cat <(grep '^#' $DATA/clinvar-benign-exac.vcf) <(grep -v '^#' $DATA/clinvar-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-exac.vcf.gz; tabix $DATA/clinvar-benign-exac.vcf.gz
             bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
+            python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
+            bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
+            bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -44,6 +49,8 @@ while getopts ":t:gc" opt; do
             ;;
     esac
 done
+
+echo "-title input: '${TITLE[@]}'" >&2
 
 python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
@@ -75,6 +82,7 @@ if [ ! -s $DATA/mcrae-vep-anno-vt.vcf.gz ]; then
     cat vcfheader <(sed '1,2d' denovos/mcrae.bed | awk '{print $1,$3,".",$4,$5,".","PASS","GENEINFO=" $6 ";"}' OFS="\t" | sort -k1,1 -k2,2n) | bgzip -c > denovos/mcrae.vcf.gz; tabix denovos/mcrae.vcf.gz
     bash varmake.sh denovos/mcrae.vcf.gz
     python varfilter.py -x $DATA/mcrae-vep-anno-vt.vcf.gz -e exac -f -n mcrae -s patho
+    python varfilter.py -x $DATA/mcrae-vep-anno-vt.vcf.gz -e gnomad -f -n mcrae -s patho
 fi
 
 if [ ! -s denovos/deligt.vcf.gz ] || [ ! -s denovos/deligtcontrol.vcf.gz ]; then
@@ -93,16 +101,21 @@ if [ ! -s $DATA/CADDindels.vcf.gz ]; then
 fi
 
 bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 5 > tmp/plipatho
-bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
+bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 5 > tmp/pli2patho
+bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 5 > tmp/pli2benign
 
 bedtools intersect -a rvis.bed -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 5 > tmp/rvispatho
-bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
+bedtools intersect -a rvis.bed -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 5 > tmp/rvis2patho
+bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 5 > tmp/rvis2benign
 
 bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/mcrae-patho-exac.vcf | cut -f 14 > tmp/mcraepatho
+bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/mcrae-patho-gnomad.vcf | cut -f 14 > tmp/mcrae2patho
 
-python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz 2>/dev/null #2>/dev/null is because the phred score is in the filter column # don't forget to switch gnomad for exac and vice-versa
+python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/cadd2patho tmp/cadd2benign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over # don't forget to switch gnomad for exac and vice-versa
 
-paste tmp/mcraepatho | python hist.py -o mcrae_dist.pdf #-t "$TITLE"
+paste tmp/mcraepatho | python hist.py -o mcraeexac_dist.pdf #-t "$TITLE"
+paste tmp/mcrae2patho | python hist.py -o mcraegnomad_dist.pdf #-t "$TITLE"
 paste tmp/ccrbenign tmp/ccrpatho | python hist.py -o exac_dist.pdf -t "$TITLE"
 paste tmp/ccr2benign tmp/ccr2patho | python hist.py -o gnomad_dist.pdf -t "$TITLE"
-python roccurve.py -t "$TITLE" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign -d tmp/caddpatho tmp/caddbenign -g tmp/ccr2patho tmp/ccr2benign -r tmp/rvispatho tmp/rvisbenign
+python roccurve.py -t "${TITLE[0]}" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign -d tmp/caddpatho tmp/caddbenign -r tmp/rvispatho tmp/rvisbenign -o exac_roc.pdf
+python roccurve.py -t "${TITLE[1]}" -g tmp/ccr2patho tmp/ccr2benign -p tmp/pli2patho tmp/pli2benign -d tmp/cadd2patho tmp/cadd2benign -r tmp/rvis2patho tmp/rvis2benign -o gnomad_roc.pdf

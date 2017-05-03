@@ -9,15 +9,17 @@ import argparse
 parser=argparse.ArgumentParser()
 parser.add_argument("-t", "--title", help="Title")
 parser.add_argument("-c", "--ccr", help="ccr based on exac; pathogenic percentile file, then benign percentile file", nargs="*")
-parser.set_defaults(ccr = ['tmp/ccrpatho','tmp/ccrbenign'])
+#parser.set_defaults(ccr = ['tmp/ccrpatho','tmp/ccrbenign'])
 parser.add_argument("-p", "--pli", help="pli pathogenic score file, then benign pli score file", nargs="*")
-parser.set_defaults(ccr = ['tmp/plipatho','tmp/plibenign'])
+#parser.set_defaults(pli = ['tmp/plipatho','tmp/plibenign'])
 parser.add_argument("-d", "--cadd", help="cadd pathogenic score file, then benign cadd score file", nargs="*")
-parser.set_defaults(ccr = ['tmp/caddpatho','tmp/caddbenign'])
+#parser.set_defaults(cadd = ['tmp/caddpatho','tmp/caddbenign'])
 parser.add_argument("-g", "--gnomad", help="ccr based on gnomad; pathogenic percentile file, then benign percentile file", nargs="*")
-parser.set_defaults(ccr = ['tmp/ccr2patho','tmp/ccr2benign'])
+#parser.set_defaults(gnomad = ['tmp/ccr2patho','tmp/ccr2benign'])
 parser.add_argument("-r", "--rvis", help="pathogenic rvis score file, then benign rvis score file", nargs="*")
-parser.set_defaults(ccr = ['tmp/rvispatho','tmp/rvisbenign'])
+#parser.set_defaults(rvis = ['tmp/rvispatho','tmp/rvisbenign'])
+parser.add_argument("-o", "--outfile", help="output file, preferably something roc.pdf")
+#parser.set_defaults(outfile = 'roc.pdf')
 args=parser.parse_args()
 ccr=args.ccr
 pli=args.pli
@@ -25,6 +27,7 @@ cadd=args.cadd
 gnomad=args.gnomad
 rvis=args.rvis
 title=args.title
+outfile=args.outfile
 
 if ccr:
     p=open(ccr[0],'r') #pathogenic percentiles from CCR
@@ -99,4 +102,4 @@ if rvis:
 plt.title(title)
 plt.xlabel('False Positive Rate'); plt.ylabel('True Positive Rate')
 plt.legend(loc='best')
-plt.savefig('roc.pdf',bbox_inches='tight')
+plt.savefig(outfile,bbox_inches='tight')
