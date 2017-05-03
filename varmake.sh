@@ -11,6 +11,16 @@ if [ ! -s $DATA/${FILE}_vt.vcf ]; then
     vt normalize $DATA/${FILE}_dec.vcf -o $DATA/${FILE}_vt.vcf -r $DATA/grch37.fa
 fi
 
+if [ ! -s $DATA/ExAC.r1.vt.vep.alts.vcf.gz ]; then
+    cat <(grep "^#" $DATA/ExAC.r1.vt.vep.vcf) <(grep -v "^#" $DATA/ExAC.r1.vt.vep.vcf | awk '{print $0 ";refs=" $4 ";" "alts=" $5}' FS='\t' OFS='\t') > $DATA/ExAC.r1.vt.vep.alts.vcf; bgzip -c $DATA/ExAC.r1.vt.vep.alts.vcf > $DATA/ExAC.r1.vt.vep.alts.vcf.gz; tabix $DATA/ExAC.r1.vt.vep.alts.vcf.gz
+fi
+
+if [ ! -s $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf]; then
+    cat <(grep "^#" $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf) <(grep -v "^#" $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf | awk '{print $0 ";refs=" $4 ";" "alts=" $5}' FS='\t' OFS='\t') > $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf; bgzip -c $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf > $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf.gz; tabix $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf.gz
+fi
+
+# cat <(grep "^#" $DATA/gnomad_vt.vcf) <(grep -v "^#" $DATA/gnomad_vt.vcf | awk '{print $0 ";refs=" $4 ";" "alts=" $5}' FS='\t' OFS='\t') command to add refs and alts here, then add gnomad_alts from alts and exac_alts from alts to conf files depending on file annotated with
+
 if [ $exac ]; then
     vcfanno -lua $HOME/analysis/custom.lua -permissive-overlap -p 4 -base-path $DATA $HOME/analysis/exaconly.conf $DATA/${FILE}_vt.vcf > $DATA/${FILE}-anno-vt.vcf
 else

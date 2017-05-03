@@ -63,14 +63,8 @@ f.write(header)
 gene = ''
 kcsq = variants["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 
-prevpos=-1; idx=0
 for variant in variants:
     info = variant.INFO
-    if prevpos == variant.POS:
-        idx+=1
-    else:
-        idx=0
-        prevpos = variant.POS
     if clinvar:
         if not cfilter(info, varstatus):
             continue
@@ -78,6 +72,7 @@ for variant in variants:
     gnomad_filter = variant.INFO.get('gnomad_filter')
     exac_af = variant.INFO.get('ac_exac_all')
     exac_filter = variant.INFO.get('exac_filter')
+    ref = variant.REF
     alt = variant.ALT[0]
     try:
         csqs = [dict(zip(kcsq, c.split("|"))) for c in info['CSQ'].split(",")]
@@ -123,12 +118,18 @@ for variant in variants:
                 elif "gnomad" in exacver:
                     try:
                     # add fix here to pull in alts from gnomad, not oldmultiallelic
-                        alts=[j for i in info['gnomad_oldmultiallelic'].split(",") for j in i.split("/")[1:]]
-                        if alt in alts:
-                            altind=alts.index(alt)
-                            if info['gnomad_filterstatus'].split(",")[altind] in ["PASS", "SEGDUP", "LCR"]:
-                                cct=-1
-                                continue
+                        refs=[j for i in info['gnomad_ref'].split(",")]
+                        alts=[j for i in info['gnomad_alts'].split(",")]
+                        #alts=[j for i in info['gnomad_oldmultiallelic'].split(",") for j in i.split("/")[1:]]
+                        if alt in alts and ref in refs:
+                            #altind=alts.index(alt)
+                            altinds = [i for i, x in enumerate(alts) if x == alt]
+                            refinds = [i for i, x in enumerate(refs) if x == ref]
+                            inds=[i for i in refinds for j in altinds if j == i]
+                            for ind in inds:
+                                if info['gnomad_filterstatus'].split(",")[ind] in ["PASS", "SEGDUP", "LCR"]:
+                                    cct=-1
+                                    continue
                     except KeyError:
                         pass
                     if gnomad_af is not None and (gnomad_filter is None or gnomad_filter in ["PASS", "SEGDUP", "LCR"]):
