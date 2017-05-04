@@ -15,7 +15,7 @@ if [ ! -s $DATA/ExAC.r1.vt.vep.alts.vcf.gz ]; then
     cat <(grep "^#" $DATA/ExAC.r1.vt.vep.vcf) <(grep -v "^#" $DATA/ExAC.r1.vt.vep.vcf | awk '{print $0 ";refs=" $4 ";" "alts=" $5}' FS='\t' OFS='\t') > $DATA/ExAC.r1.vt.vep.alts.vcf; bgzip -c $DATA/ExAC.r1.vt.vep.alts.vcf > $DATA/ExAC.r1.vt.vep.alts.vcf.gz; tabix $DATA/ExAC.r1.vt.vep.alts.vcf.gz
 fi
 
-if [ ! -s $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf]; then
+if [ ! -s $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf.gz ]; then
     cat <(grep "^#" $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf) <(grep -v "^#" $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.vcf | awk '{print $0 ";refs=" $4 ";" "alts=" $5}' FS='\t' OFS='\t') > $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf; bgzip -c $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf > $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf.gz; tabix $DATA/gnomad.exomes.r2.0.1.sites.vep.vt.alts.vcf.gz
 fi
 

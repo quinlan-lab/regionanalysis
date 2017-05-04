@@ -137,7 +137,5 @@ for variant in variants:
                             if csq2['Feature'] == csq['Feature'] and (csq2['Amino_acids'] == csq['Amino_acids'] or csq2['Codons'] == csq['Codons']):
                                 cct=0
                                 break
-    if variant.POS == 949395:
-        print variant
     if variant.CHROM != 'X' and variant.CHROM != 'Y' and cct!=0:
         f.write(str(variant))
