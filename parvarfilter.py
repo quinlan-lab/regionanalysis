@@ -66,22 +66,27 @@ def parseinfo(info):
 def cfilter(info, varstatus):
     clnsig=info['CLNSIG']; clnrev=info['CLNREVSTAT']
     clnsig=re.split('\||,',clnsig); clnrev=re.split('\||,',clnrev)
+    var=False
     if varstatus=="patho":
         for sig, rev in zip(clnsig,clnrev):
             if (sig == '5' or sig == '4'):
-                if rev not in ['no_assertion', 'no_criteria', 'conf']:
-                    continue
+                if rev not in ['no_assertion', 'no_criteria']:
+                    var=True
+                elif rev in ['conf']:
+                    return False
             else:
                 return False
-        return True
+        return var
     if varstatus=="benign":
         for sig, rev in zip(clnsig,clnrev):
             if sig == '2':
-                if rev not in ['no_assertion', 'no_criteria', 'conf']:
-                    continue
+                if rev not in ['no_assertion', 'no_criteria']:
+                    var=True
+                elif rev in ['conf']:
+                    return False
             else:
                 return False
-        return True
+        return var
 
 def pervariant(varianttuple):
     autopass=False
