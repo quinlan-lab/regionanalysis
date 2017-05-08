@@ -51,7 +51,7 @@ if rec:
 folder=os.path.dirname(variants)+'/'
 if folder == '/':
     folder = ''
-f=open(folder+name+'-'+varstatus+'-'+exacver+'.vcf','wb')
+f=open(folder+name+'-'+varstatus+'-'+exacver+'.txt','wb')
 
 infile=open(variants, "r")
 
@@ -72,12 +72,9 @@ def cfilter(info, varstatus):
         return (info['CLNSIG'] == '5' or info['CLNSIG'] == '4') and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']
 
 def pervariant(varianttuple):
-    autopass=False; varpass=True
-    filter,dom,haplo,rec,varstatus,clinvar,name,variant = varianttuple
-    gene = ''; cct=0; outs=''
-    fields=variant.strip().split("\t")
-    original=fields[:8] #gnomad/clinvar
-    filterby=fields[8:] #exac/gnomad, a set of variants to filter by
+    autopass=False
+    filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby = varianttuple
+    gene = ''; outs=''
     oinfo = parseinfo(original[-1]); finfo = parseinfo(filterby[-1])
     ofilter = original[-2]; ffilter = filterby[-2]
     
@@ -108,32 +105,45 @@ def pervariant(varianttuple):
         gene = ocsq['SYMBOL']
         if dom or haplo or rec:
             if gene not in dom_genes or haplo_genes or rec_genes:
-                continue
+                varpass=False
+                return varpass
         if "benign" in varstatus and "clinvar" in name or autopass:
-            return "\t".join(original)
-            break
+            varpass=True
+            return varpass
         if filter:
             if ffilter is None or ffilter in ["PASS", "SEGDUP", "LCR"]:
                 if exacver == "gnomad":
                     try:
                         if finfo['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
-                            return "\t".join(original)
+                            varpass=True
+                            return varpass
                     except KeyError:
                         pass
                 for fcsq in (c for c in fcsqs if c['BIOTYPE'] == 'protein_coding'):
                     if not u.isfunctional(fcsq): continue
                     if fcsq['Feature'] == ocsq['Feature'] and (fcsq['Amino_acids'] == ocsq['Amino_acids'] or fcsq['Codons'] == ocsq['Codons']):
                         varpass=False
-
-        if original[0] != 'X' and original[0] != 'Y' and varpass:
-            return "\t".join(original)
-            break
+                        return varpass
+    varpass = True
+    return varpass
 
 #for outs in p.imap_unordered(pervariant, ((filter,dom,haplo,rec,varstatus,clinvar,name,variant) for variant in infile)):
 #    if outs:
 #        print outs
+
+# change code to group variants by original POS, REF, ALT and filter all duplicates of a variant if even one is filtered; probably need to remove the generator unfortunately
+# should be a large speed decrease
+varprev = None; varpass = True
+
 for variant in infile:
-    outs=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,variant))
-    if outs:
-        #print outs
-        f.write(outs)
+    fields=variant.strip().split("\t")
+    original=fields[:8] #gnomad/clinvar
+    filterby=fields[8:] #exac/gnomad, a set of variants to filter by
+    if varprev != original:
+        varpass = True
+    if varpass:
+        varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby))
+    if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
+        if varprev[1] == "98279098": print >> sys.stderr, [varprev, filterby]
+        f.write("\t".join(varprev)+"\n")
+    varprev = original
