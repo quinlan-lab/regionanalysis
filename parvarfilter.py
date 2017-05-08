@@ -1,10 +1,10 @@
 import sys
-import multiprocessing as mp
 import exacresiduals.utils as u
 reload(sys)
 sys.setdefaultencoding("ISO-8859-1")
 import argparse
 import os
+import re
 
 parser=argparse.ArgumentParser()
 parser.add_argument("-x", "--variant", help="variant file")
@@ -32,8 +32,6 @@ clinvar=args.clinvar
 varstatus=args.status
 
 kcsq="ALLELE|Consequence|Codons|Amino_acids|Gene|SYMBOL|Feature|EXON|PolyPhen|SIFT|Protein_position|BIOTYPE|ALLELE_NUM|cDNA_position".split("|") # later can extract header in unix so it isn't hard coded
-
-p = mp.Pool(12)
 
 dom_genes = set() # since our model best represents dominant negative phenotypes, we are only interested in autosomal dominant genes here (from genecards)
 haplo_genes = set() # since our model best represents dominant negative and haploinsufficient phenotypes, here we incorporate ClinGen 3 genes
@@ -66,65 +64,81 @@ def parseinfo(info):
     return d
 
 def cfilter(info, varstatus):
-    if varstatus=="benign":
-        return info['CLNSIG'] == '2' and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']
+    clnsig=info['CLNSIG']; clnrev=info['CLNREVSTAT']
+    clnsig=re.split('\||,',clnsig); clnrev=re.split('\||,',clnrev)
     if varstatus=="patho":
-        return (info['CLNSIG'] == '5' or info['CLNSIG'] == '4') and info['CLNREVSTAT'] not in ['no_assertion', 'no_criteria', 'conf']
+        for sig, rev in zip(clnsig,clnrev):
+            if (sig == '5' or sig == '4'):
+                if rev not in ['no_assertion', 'no_criteria', 'conf']:
+                    continue
+            else:
+                return False
+        return True
+    if varstatus=="benign":
+        for sig, rev in zip(clnsig,clnrev):
+            if sig == '2':
+                if rev not in ['no_assertion', 'no_criteria', 'conf']:
+                    continue
+            else:
+                return False
+        return True
 
 def pervariant(varianttuple):
     autopass=False
-    filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby = varianttuple
-    gene = ''; outs=''
+    filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby,varpass = varianttuple
+    gene = ''
     oinfo = parseinfo(original[-1]); finfo = parseinfo(filterby[-1])
     ofilter = original[-2]; ffilter = filterby[-2]
     
     if "gnomad" in name:
         try:
             if oinfo['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
-                return outs
+                return False
         except KeyError:
             pass
     #if ofilter not in ["PASS", "SEGDUP", "LCR", "."]:
     #    return outs
     if clinvar:
         if not cfilter(oinfo, varstatus):
-            return outs
-
+            return False
+    
     try:
         ocsqs = [dict(zip(kcsq, c.split("|"))) for c in oinfo['CSQ'].split(",")]
     except KeyError:
-        return outs
+        return False
     try:
         fcsqs = [dict(zip(kcsq, c.split("|"))) for c in finfo['CSQ'].split(",")]
     except KeyError:
         autopass=True
 
     for ocsq in (c for c in ocsqs if c['BIOTYPE'] == 'protein_coding'):
-        if ocsq['Feature'] == '' or ocsq['EXON'] == '': continue
-        if not u.isfunctional(ocsq): continue
+        if ocsq['Feature'] == '' or ocsq['EXON'] == '':
+            varpass = False
+            continue
+        if not u.isfunctional(ocsq):
+            varpass = False
+            continue
         gene = ocsq['SYMBOL']
         if dom or haplo or rec:
             if gene not in dom_genes or haplo_genes or rec_genes:
-                varpass=False
-                return varpass
+                return False
         if "benign" in varstatus and "clinvar" in name or autopass:
-            varpass=True
-            return varpass
+            return True
         if filter:
             if ffilter is None or ffilter in ["PASS", "SEGDUP", "LCR"]:
                 if exacver == "gnomad":
                     try:
                         if finfo['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
-                            varpass=True
-                            return varpass
+                            return True
                     except KeyError:
                         pass
                 for fcsq in (c for c in fcsqs if c['BIOTYPE'] == 'protein_coding'):
-                    if not u.isfunctional(fcsq): continue
+                    if not u.isfunctional(fcsq):
+                        varpass = True
+                        continue
                     if fcsq['Feature'] == ocsq['Feature'] and (fcsq['Amino_acids'] == ocsq['Amino_acids'] or fcsq['Codons'] == ocsq['Codons']):
-                        varpass=False
-                        return varpass
-    varpass = True
+                        return False
+            varpass = True
     return varpass
 
 #for outs in p.imap_unordered(pervariant, ((filter,dom,haplo,rec,varstatus,clinvar,name,variant) for variant in infile)):
@@ -141,9 +155,14 @@ for variant in infile:
     filterby=fields[8:] #exac/gnomad, a set of variants to filter by
     if varprev != original:
         varpass = True
-    if varpass:
-        varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby))
+    if varpass: 
+        if varprev is None:
+            varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby,varpass))
+        else:
+            varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,varprev,filterprev,varpass))
     if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
-        if varprev[1] == "98279098": print >> sys.stderr, [varprev, filterby]
         f.write("\t".join(varprev)+"\n")
-    varprev = original
+    varprev = original; filterprev = filterby
+
+if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
+        f.write("\t".join(varprev)+"\n")
