@@ -20,6 +20,8 @@ parser.add_argument("-r", "--rvis", help="pathogenic rvis score file, then benig
 #parser.set_defaults(rvis = ['tmp/rvispatho','tmp/rvisbenign'])
 parser.add_argument("-o", "--outfile", help="output file, preferably something roc.pdf")
 #parser.set_defaults(outfile = 'roc.pdf')
+parser.add_argument("-n", "--numvars", help="number of pathogenic and then number of benign variants", nargs="*")
+#parser.set_defaults(numvars = ['1000', '1000'])
 args=parser.parse_args()
 ccr=args.ccr
 pli=args.pli
@@ -28,78 +30,104 @@ gnomad=args.gnomad
 rvis=args.rvis
 title=args.title
 outfile=args.outfile
+numvars=args.numvars
+pathoct=numvars[0]
+benignct=numvars[1]
+
+variants=""
 
 if ccr:
+    ep=0; eb=0
     p=open(ccr[0],'r') #pathogenic percentiles from CCR
     b=open(ccr[1],'r') #benign percentiles from CCR
     y=[]; scores=[]
     for line in p:
         y.append(1)
         scores.append(float(line))
+        ep+=1
     for line in b:
         y.append(0)
         scores.append(float(line))
+        eb+=1
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='CCR = ' + "%.3f" % (AUC), color = 'b')
+    variants+="eCCRp: "+str(ep)+"/"+str(pathoct)+"; eCCRb: " +str(eb)+"/"+str(benignct)+"\n"
 if gnomad:
+    gp=0; gb=0
     p=open(gnomad[0],'r') #pathogenic percentiles from CCR
     b=open(gnomad[1],'r') #benign percentiles from CCR
     y=[]; scores=[]
     for line in p:
         y.append(1)
         scores.append(float(line))
+        gp+=1
     for line in b:
         y.append(0)
         scores.append(float(line))
+        gb+=1
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='CCR w/gnomAD = ' + "%.3f " % (AUC), color = 'm')
+    variants+="gCCRp: "+str(gp)+"/"+str(pathoct)+"; gCCRb: " +str(gb)+"/"+str(benignct)+"\n"
 if pli:    
+    pp=0; pb=0
     p=open(pli[0],'r') #pathogenic pLI
     b=open(pli[1],'r') #benign pLI
     y=[]; scores=[]
     for line in p:
         y.append(1)
         scores.append(float(line))
+        pp+=1
     for line in b:
         y.append(0)
         scores.append(float(line))
+        pb+=1
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='pLI = ' + "%.3f " % (AUC), color = 'g')
+    variants+="pLIp: "+str(pp)+"/"+str(pathoct)+"; pLIb: " +str(pb)+"/"+str(benignct)+"\n"
 if cadd:
+    cp=0; cb=0
     p=open(cadd[0],'r') #pathogenic CADD
     b=open(cadd[1],'r') #benign CADD
     y=[]; scores=[]
     for line in p:
         y.append(1)
         scores.append(float(line))
+        cp+=1
     for line in b:
         y.append(0)
         scores.append(float(line))
+        cb+=1
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='CADD = ' + "%.3f " % (AUC), color = 'k')
+    variants+="CADDp: "+str(cp)+"/"+str(pathoct)+"; CADDb: " +str(cb)+"/"+str(benignct)+"\n"
 if rvis:
+    rp=0; rb=0
     p=open(rvis[0],'r') #pathogenic rvis
     b=open(rvis[1],'r') #benign rvis
     y=[]; scores=[]
     for line in p:
         y.append(1)
         scores.append(100-float(line))
+        rp+=1
     for line in b:
         y.append(0)
         scores.append(100-float(line))
+        rb+=1
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='RVIS = ' + "%.3f " % (AUC), color = 'r')
-plt.title(title)
+    variants+="RVISp: "+str(rp)+"/"+str(pathoct)+"; RVISb: " +str(rb)+"/"+str(benignct)+"\n"
+
+plt.title(title+"\n"+variants)
 plt.xlabel('False Positive Rate'); plt.ylabel('True Positive Rate')
 plt.legend(loc='best')
 plt.savefig(outfile,bbox_inches='tight')
