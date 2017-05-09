@@ -38,13 +38,13 @@ GB=$(grep -v "^#" $DATA/clinvar-benign-gnomad.vcf | wc -l)
 
 #exac
 cat <(grep '^#' $DATA/clinvar-patho-exac.vcf) <(grep -v '^#' $DATA/clinvar-patho-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-exac.vcf.gz; tabix $DATA/clinvar-patho-exac.vcf.gz
-bedtools intersect -a exac-ccrs.bed.gz -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 14 > tmp/ccrpatho
+python scorevars.py -x $DATA/clinvar-patho-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrpatho
 
 #gnomAD
 cat <(grep '^#' $DATA/clinvar-benign-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-benign-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-gnomad.vcf.gz; tabix $DATA/clinvar-benign-gnomad.vcf.gz
 cat <(grep '^#' $DATA/clinvar-patho-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-patho-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-gnomad.vcf.gz; tabix $DATA/clinvar-patho-gnomad.vcf.gz
-bedtools intersect -a gnomad-ccrs.bed.gz -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 14 > tmp/ccr2patho
-bedtools intersect -a gnomad-ccrs.bed.gz -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 14 > tmp/ccr2benign
+python scorevars.py -x $DATA/clinvar-patho-gnomad.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccr2patho
+python scorevars.py -x $DATA/clinvar-benign-gnomad.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccr2benign
 
 while getopts ":t:gc" opt; do
     case $opt in
@@ -60,7 +60,7 @@ while getopts ":t:gc" opt; do
             cat <(grep '^#' $DATA/gnomad-benign-exac.vcf) <(grep -v '^#' $DATA/gnomad-benign-exac.vcf | shuf -n $EP | sort -k1,1 -k2,2n) | bgzip -c > $DATA/gnomad-benign-exac.vcf.gz; tabix $DATA/gnomad-benign-exac.vcf.gz # shuf adds subsampling
             EB=$(zgrep -v "^#" $DATA/gnomad-benign-exac.vcf.gz | wc -l)
             #bedtools intersect -a $DATA/gnomad-benign-exac.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -v > $DATA/gnomadbenigns.vcf.gz
-            bedtools intersect -a exac-ccrs.bed.gz -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
+            python scorevars.py -x $DATA/gnomad-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
             python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
             bedtools intersect -a rvis.bed -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
@@ -73,7 +73,7 @@ while getopts ":t:gc" opt; do
 
             #exac
             cat <(grep '^#' $DATA/clinvar-benign-exac.vcf) <(grep -v '^#' $DATA/clinvar-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-exac.vcf.gz; tabix $DATA/clinvar-benign-exac.vcf.gz
-            bedtools intersect -a exac-ccrs.bed.gz -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 14 > tmp/ccrbenign
+            python scorevars.py -x $DATA/clinvar-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
             python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
             bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
