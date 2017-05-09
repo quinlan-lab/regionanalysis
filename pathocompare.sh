@@ -53,7 +53,7 @@ while getopts ":t:gc" opt; do
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            python parvarfilter.py -x $DATA/gnomad-exac.txt -f -n gnomad -c -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+            python parvarfilter.py -x $DATA/gnomad-exac.txt -f -n gnomad -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
             cat <(zgrep "^#" $DATA/gnomad.exomes.r2.0.1.sites.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/gnomad-benign-exac.txt | uniq) > $DATA/gnomad-benign-exac.vcf
 
             #exac
