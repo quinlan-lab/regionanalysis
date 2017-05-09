@@ -6,32 +6,32 @@ import argparse
 import os
 import re
 
-parser=argparse.ArgumentParser()
-parser.add_argument("-x", "--variant", help="variant file")
-parser.add_argument("-d", "--dominant", help="dominant genes file, if necessary")
-parser.add_argument("-i", "--haploinsufficient", help="clingen dosage haplosufficiency 3 genes file, if necessary") #-h overlaps help
-parser.add_argument("-e", "--exacver", help="specify 'exac' or 'gnomad'")
-parser.add_argument("-f", "--filter", help="filter on presence in exac/gnomad dataset", action="store_true")
-parser.add_argument("-n", "--name", help="clinvar, mcrae, etc.")
-parser.add_argument("-r", "--recessive", help="recessive genes file, if necessary")
-parser.add_argument("-c", "--clinvar", help="working with clinvar data", action="store_true")
-parser.add_argument("-s", "--status", help="variant status: benign or patho, type one of the two exactly")
+parser = argparse.ArgumentParser()
+parser.add_argument("-x", "--variant", help = "variant file")
+parser.add_argument("-d", "--dominant", help = "dominant genes file, if necessary")
+parser.add_argument("-i", "--haploinsufficient", help = "clingen dosage haplosufficiency 3 genes file, if necessary") #-h overlaps help
+parser.add_argument("-e", "--exacver", help = "specify 'exac' or 'gnomad'")
+parser.add_argument("-f", "--filter", help = "filter on presence in exac/gnomad dataset", action = "store_true")
+parser.add_argument("-n", "--name", help = "clinvar, mcrae, etc.")
+parser.add_argument("-r", "--recessive", help = "recessive genes file, if necessary")
+parser.add_argument("-c", "--clinvar", help = "working with clinvar data", action = "store_true")
+parser.add_argument("-s", "--status", help = "variant status: benign or patho, type one of the two exactly")
 #parser.set_defaults(variants = '/scratch/ucgd/lustre/u1021864/serial/variants-vep-anno-vt.vcf.gz')
 #parser.set_defaults(dominant = 'genescreens/ad_genecards_clean.txt')
 #parser.set_defaults(recessive = 'genescreens/ar_genecards_clean.txt')
 #parser.set_defaults(haploinsufficient = 'genescreens/clingen_level3_genes_2015_02_27.tsv')
-args=parser.parse_args()
-dom=args.dominant
-rec=args.recessive
-haplo=args.haploinsufficient
-variants=args.variant
-exacver=args.exacver
-filter=args.filter
-name=args.name
-clinvar=args.clinvar
-varstatus=args.status
+args = parser.parse_args()
+dom = args.dominant
+rec = args.recessive
+haplo = args.haploinsufficient
+variants = args.variant
+exacver = args.exacver
+filter = args.filter
+name = args.name
+clinvar = args.clinvar
+varstatus = args.status
 
-kcsq="ALLELE|Consequence|Codons|Amino_acids|Gene|SYMBOL|Feature|EXON|PolyPhen|SIFT|Protein_position|BIOTYPE|ALLELE_NUM|cDNA_position".split("|") # later can extract header in unix so it isn't hard coded
+kcsq = "ALLELE|Consequence|Codons|Amino_acids|Gene|SYMBOL|Feature|EXON|PolyPhen|SIFT|Protein_position|BIOTYPE|ALLELE_NUM|cDNA_position".split("|") # later can extract header in unix so it isn't hard coded
 
 dom_genes = set() # since our model best represents dominant negative phenotypes, we are only interested in autosomal dominant genes here (from genecards)
 haplo_genes = set() # since our model best represents dominant negative and haploinsufficient phenotypes, here we incorporate ClinGen 3 genes
@@ -46,42 +46,42 @@ if rec:
     for line in open(rec): #genescreens/clingen_level3_genes_2015_02_27.tsv
         rec_genes.add(line.strip())
 
-folder=os.path.dirname(variants)+'/'
+folder = os.path.dirname(variants) + '/'
 if folder == '/':
     folder = ''
-f=open(folder+name+'-'+varstatus+'-'+exacver+'.txt','wb')
+f = open(folder + name + '-' + varstatus + '-' + exacver + '.txt' , 'wb')
 
-infile=open(variants, "r")
+infile = open(variants, "r")
 
 def parseinfo(info):
     d={}
     for field in info.split(";"):
-        vals=field.split("=")
+        vals = field.split("=")
         if len(vals)<2:
-            d[vals[0]]=''
+            d[vals[0]] = ''
         else:
-            d[vals[0]]=vals[1]
+            d[vals[0]] = vals[1]
     return d
 
 def cfilter(info, varstatus):
-    clnsig=info['CLNSIG']; clnrev=info['CLNREVSTAT']
-    clnsig=re.split('\||,',clnsig); clnrev=re.split('\||,',clnrev)
-    var=False
-    if varstatus=="patho":
+    clnsig = info['CLNSIG']; clnrev=info['CLNREVSTAT']
+    clnsig = re.split('\||,',clnsig); clnrev = re.split('\||,',clnrev)
+    var = False
+    if varstatus == "patho":
         for sig, rev in zip(clnsig,clnrev):
             if (sig == '5' or sig == '4'):
                 if rev not in ['no_assertion', 'no_criteria']:
-                    var=True
+                    var = True
                 elif rev in ['conf']:
                     return False
             else:
                 return False
         return var
-    if varstatus=="benign":
+    if varstatus == "benign":
         for sig, rev in zip(clnsig,clnrev):
             if sig == '2':
                 if rev not in ['no_assertion', 'no_criteria']:
-                    var=True
+                    var = True
                 elif rev in ['conf']:
                     return False
             else:
@@ -89,7 +89,7 @@ def cfilter(info, varstatus):
         return var
 
 def pervariant(varianttuple):
-    autopass=False
+    autopass = False
     filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby,varpass = varianttuple
     gene = ''
     oinfo = parseinfo(original[-1]); finfo = parseinfo(filterby[-1])
@@ -114,7 +114,7 @@ def pervariant(varianttuple):
     try:
         fcsqs = [dict(zip(kcsq, c.split("|"))) for c in finfo['CSQ'].split(",")]
     except KeyError:
-        autopass=True
+        autopass = True
 
     for ocsq in (c for c in ocsqs if c['BIOTYPE'] == 'protein_coding'):
         if ocsq['Feature'] == '' or ocsq['EXON'] == '':
@@ -155,19 +155,19 @@ def pervariant(varianttuple):
 varprev = None; varpass = True
 
 for variant in infile:
-    fields=variant.strip().split("\t")
-    original=fields[:8] #gnomad/clinvar
-    filterby=fields[8:] #exac/gnomad, a set of variants to filter by
+    fields = variant.strip().split("\t")
+    original = fields[:8] #gnomad/clinvar
+    filterby = fields[8:] #exac/gnomad, a set of variants to filter by
     if varprev != original:
         varpass = True
     if varpass: 
         if varprev is None:
-            varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby,varpass))
+            pass # do nothing for the first pass because it will be done once it is the "previous variant"
         else:
-            varpass=pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,varprev,filterprev,varpass))
+            varpass = pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,varprev,filterprev,varpass))
     if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
         f.write("\t".join(varprev)+"\n")
     varprev = original; filterprev = filterby
 
-if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
-        f.write("\t".join(varprev)+"\n")
+if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varpass:
+    f.write("\t".join(varprev)+"\n")
