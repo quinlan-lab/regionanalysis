@@ -18,11 +18,11 @@ if [ ! -s $DATA/gnomad-exac.txt ]; then
     bedtools intersect -a $DATA/gnomad-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wa -wb > $DATA/gnomad-exac.txt
 fi
 
-python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s patho -e gnomad
+python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s patho -e gnomad -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-patho-gnomad.txt | uniq) > $DATA/clinvar-patho-gnomad.vcf
-python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s patho -e exac
+python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s patho -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-patho-exac.txt | uniq) > $DATA/clinvar-patho-exac.vcf
-python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s benign -e gnomad
+python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s benign -e gnomad -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-benign-gnomad.txt | uniq) > $DATA/clinvar-benign-gnomad.vcf
 #python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 #python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e gnomad -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s patho #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
@@ -32,6 +32,16 @@ EP=$(grep -v "^#" $DATA/clinvar-patho-exac.vcf | wc -l)
 GP=$(grep -v "^#" $DATA/clinvar-patho-gnomad.vcf | wc -l)
 GB=$(grep -v "^#" $DATA/clinvar-benign-gnomad.vcf | wc -l)
 
+#exac
+cat <(grep '^#' $DATA/clinvar-patho-exac.vcf) <(grep -v '^#' $DATA/clinvar-patho-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-exac.vcf.gz; tabix $DATA/clinvar-patho-exac.vcf.gz
+bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 14 > tmp/ccrpatho
+
+#gnomAD
+cat <(grep '^#' $DATA/clinvar-benign-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-benign-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-gnomad.vcf.gz; tabix $DATA/clinvar-benign-gnomad.vcf.gz
+cat <(grep '^#' $DATA/clinvar-patho-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-patho-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-gnomad.vcf.gz; tabix $DATA/clinvar-patho-gnomad.vcf.gz
+bedtools intersect -a <(sed '1d' exacresiduals/results/newweight30x.5/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 14 > tmp/ccr2patho
+bedtools intersect -a <(sed '1d' exacresiduals/results/newweight30x.5/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 14 > tmp/ccr2benign
+
 while getopts ":t:gc" opt; do
     case $opt in
         t)
@@ -39,7 +49,7 @@ while getopts ":t:gc" opt; do
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            python parvarfilter.py -x $DATA/gnomad-exac.txt -f -n gnomad -c -s benign -e exac
+            python parvarfilter.py -x $DATA/gnomad-exac.txt -f -n gnomad -c -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
             cat <(zgrep "^#" $DATA/gnomad.exomes.r2.0.1.sites.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/gnomad-benign-exac.txt | uniq) > $DATA/gnomad-benign-exac.vcf
             #python varfilter.py -x $DATA/gnomad-vep-anno-vt.vcf.gz -e exac -f -n gnomad -s benign -d genescreens/ad_genecards_clean.txt #ogfiles/all_ad.tsv # -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
 
@@ -54,7 +64,7 @@ while getopts ":t:gc" opt; do
             ;;
         c)
             echo "-clinvar input triggered" >&2
-            python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s benign -e exac
+            python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
             cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-benign-exac.txt | uniq) > $DATA/clinvar-benign-exac.vcf
             #python varfilter.py -x $DATA/clinvar_20170104-vep-anno-vt.vcf.gz -e exac -d genescreens/ad_genecards_clean.txt -c -f -n clinvar -s benign #-i genescreens/clingen_level3_genes_2015_02_27.tsv # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
             EB=$(grep -v "^#" $DATA/clinvar-benign-exac.vcf | wc -l)
@@ -78,17 +88,6 @@ while getopts ":t:gc" opt; do
 done
 
 echo "-title input: '${TITLE[@]}'" >&2
-
-#exac
-cat <(grep '^#' $DATA/clinvar-patho-exac.vcf) <(grep -v '^#' $DATA/clinvar-patho-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-exac.vcf.gz; tabix $DATA/clinvar-patho-exac.vcf.gz
-bedtools intersect -a <(sed '1d' exacresiduals/results/exacv1newweight/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 14 > tmp/ccrpatho
-
-#gnomAD
-cat <(grep '^#' $DATA/clinvar-benign-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-benign-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-gnomad.vcf.gz; tabix $DATA/clinvar-benign-gnomad.vcf.gz
-cat <(grep '^#' $DATA/clinvar-patho-gnomad.vcf) <(grep -v '^#' $DATA/clinvar-patho-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-patho-gnomad.vcf.gz; tabix $DATA/clinvar-patho-gnomad.vcf.gz
-bedtools intersect -a <(sed '1d' exacresiduals/results/newweight30x.5/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 14 > tmp/ccr2patho
-bedtools intersect -a <(sed '1d' exacresiduals/results/newweight30x.5/weightedresiduals-cpg-novariant.txt) -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 14 > tmp/ccr2benign
-
 
 if [ ! -s pli.bed ]; then
     bedtools groupby -i $DATA/forweb_cleaned_exac_r03_march16_z_data_pLI.txt -g 3,5,6,2 -c 20 -o collapse | tr -s ' ' '\t' > pli.bed
