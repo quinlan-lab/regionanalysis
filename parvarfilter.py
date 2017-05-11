@@ -94,6 +94,7 @@ def pervariant(varianttuple):
     gene = ''
     oinfo = parseinfo(original[-1]); finfo = parseinfo(filterby[-1])
     ofilter = original[-2]; ffilter = filterby[-2]
+    filterpos = filterby[1]
     
     if "gnomad" in name:
         try:
@@ -101,8 +102,10 @@ def pervariant(varianttuple):
                 return False
         except KeyError:
             pass
-    #if ofilter not in ["PASS", "SEGDUP", "LCR", "."]:
-    #    return outs
+        #if float(oinfo['AF']) < 0.01: #5% is too few not in exac
+        #    return False
+    if ofilter not in ["PASS", "SEGDUP", "LCR", "."]:
+        return False
     if clinvar:
         if not cfilter(oinfo, varstatus):
             return False
@@ -115,7 +118,7 @@ def pervariant(varianttuple):
         fcsqs = [dict(zip(kcsq, c.split("|"))) for c in finfo['CSQ'].split(",")]
     except KeyError:
         autopass = True
-
+    if not any (c for c in ocsqs if c['BIOTYPE'] == 'protein_coding'): return False
     for ocsq in (c for c in ocsqs if c['BIOTYPE'] == 'protein_coding'):
         if ocsq['Feature'] == '' or ocsq['EXON'] == '':
             varpass = False
@@ -127,7 +130,7 @@ def pervariant(varianttuple):
         if dom or haplo or rec:
             if gene not in dom_genes or haplo_genes or rec_genes:
                 return False
-        if "benign" in varstatus and "clinvar" in name or autopass:
+        if ("benign" in varstatus and "clinvar" in name) or autopass or filterby == "-1":
             return True
         if filter:
             if ffilter is None or ffilter in ["PASS", "SEGDUP", "LCR"]:
@@ -144,6 +147,8 @@ def pervariant(varianttuple):
                     if fcsq['Feature'] == ocsq['Feature'] and (fcsq['Amino_acids'] == ocsq['Amino_acids'] or fcsq['Codons'] == ocsq['Codons']):
                         return False
             varpass = True
+        else:
+            return True
     return varpass
 
 #for outs in p.imap_unordered(pervariant, ((filter,dom,haplo,rec,varstatus,clinvar,name,variant) for variant in infile)):
@@ -157,7 +162,7 @@ varprev = None; varpass = True
 for variant in infile:
     fields = variant.strip().split("\t")
     original = fields[:8] #gnomad/clinvar
-    filterby = fields[8:] #exac/gnomad, a set of variants to filter by
+    filterby = fields[8:-1] #exac/gnomad, a set of variants to filter by, now :-1 because there is a -wo field
     if varprev != original:
         varpass = True
     if varpass: 

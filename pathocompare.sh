@@ -11,12 +11,13 @@ if [ ! -s $DATA/gnomad-vep-vt.vcf.gz ]; then
 fi
 
 if [ ! -s $DATA/clinvar-exac.txt ] | [ ! -s $DATA/clinvar-gnomad.txt ] ; then
-    bedtools intersect -a $DATA/clinvar_20170104-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wa -wb > $DATA/clinvar-gnomad.txt
-    bedtools intersect -a $DATA/clinvar_20170104-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wa -wb > $DATA/clinvar-exac.txt
+    bedtools intersect -a $DATA/clinvar_20170104-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wao -sorted > $DATA/clinvar-gnomad.txt
+    bedtools intersect -a $DATA/clinvar_20170104-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wao -sorted > $DATA/clinvar-exac.txt
+    #bedtools intersect -a $DATA/clinvar_20170104-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wa -wb > $DATA/clinvar-exac.txt
 fi
 
 if [ ! -s $DATA/gnomad-exac.txt ]; then
-    bedtools intersect -a $DATA/gnomad-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wa -wb > $DATA/gnomad-exac.txt
+    bedtools intersect -a $DATA/gnomad-vep-vt.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -wao -sorted > $DATA/gnomad-exac.txt
 fi
 
 if [ ! -s exac-ccrs.bed.gz ] | [ ! -s gnomad-ccrs.bed.gz ]; then
@@ -25,11 +26,11 @@ if [ ! -s exac-ccrs.bed.gz ] | [ ! -s gnomad-ccrs.bed.gz ]; then
 fi
 
 # generates the "patho.vcf" and "benign.vcf" files that are strictly filtered based on our criteria
-python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s patho -e gnomad -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+python parvarfilter.py -x $DATA/clinvar-gnomad.txt -n clinvar -c -s patho -e gnomad -d genescreens/ad_genecards_clean.txt -f #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-patho-gnomad.txt | uniq) > $DATA/clinvar-patho-gnomad.vcf
-python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s patho -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+python parvarfilter.py -x $DATA/clinvar-exac.txt -n clinvar -c -s patho -e exac -d genescreens/ad_genecards_clean.txt -f #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-patho-exac.txt | uniq) > $DATA/clinvar-patho-exac.vcf
-python parvarfilter.py -x $DATA/clinvar-gnomad.txt -f -n clinvar -c -s benign -e gnomad -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+python parvarfilter.py -x $DATA/clinvar-gnomad.txt -n clinvar -c -s benign -e gnomad -d genescreens/ad_genecards_clean.txt -f #-i genescreens/clingen_level3_genes_2015_02_27.tsv
 cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-benign-gnomad.txt | uniq) > $DATA/clinvar-benign-gnomad.vcf
 
 EP=$(grep -v "^#" $DATA/clinvar-patho-exac.vcf | wc -l)
@@ -53,7 +54,7 @@ while getopts ":t:gc" opt; do
             ;;
         g)
             echo "-gnomad as benign input was triggered" >&2
-            python parvarfilter.py -x $DATA/gnomad-exac.txt -f -n gnomad -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+            python parvarfilter.py -x $DATA/gnomad-exac.txt -n gnomad -s benign -e exac -d genescreens/ad_genecards_clean.txt -f #-i genescreens/clingen_level3_genes_2015_02_27.tsv
             cat <(zgrep "^#" $DATA/gnomad.exomes.r2.0.1.sites.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/gnomad-benign-exac.txt | uniq) > $DATA/gnomad-benign-exac.vcf
 
             #exac
@@ -67,7 +68,7 @@ while getopts ":t:gc" opt; do
             ;;
         c)
             echo "-clinvar input triggered" >&2
-            python parvarfilter.py -x $DATA/clinvar-exac.txt -f -n clinvar -c -s benign -e exac -d genescreens/ad_genecards_clean.txt #-i genescreens/clingen_level3_genes_2015_02_27.tsv
+            python parvarfilter.py -x $DATA/clinvar-exac.txt -n clinvar -c -s benign -e exac -d genescreens/ad_genecards_clean.txt -f #-i genescreens/clingen_level3_genes_2015_02_27.tsv
             cat <(zgrep "^#" $DATA/clinvar_20170104.vcf.gz ) <(sort -k1,1 -k2,2n $DATA/clinvar-benign-exac.txt | uniq) > $DATA/clinvar-benign-exac.vcf
             EB=$(grep -v "^#" $DATA/clinvar-benign-exac.vcf | wc -l)
 
