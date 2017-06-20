@@ -63,6 +63,13 @@ if [ ! -s $DATA/CADDindels.vcf.gz ]; then
     bgzip -@ 12 -c $DATA/CADDindels.vcf > $DATA/CADDindels.vcf.gz; tabix $DATA/CADDindels.vcf.gz
 fi
 
+if [ ! -s $DATA/fordist_constraint_official_mpc_values.txt.gz ]; then
+    #wget -P $DATA ftp://ftp.broadinstitute.org/pub/ExAC_release/release1/regional_missense_constraint/fordist_constraint_official_mpc_values.txt.gz
+    #wget -P $DATA ftp://ftp.broadinstitute.org/pub/ExAC_release/release1/regional_missense_constraint/fordist_constraint_official_mpc_values.txt.gz.tbi
+    cat mpcheader <(zcat $DATA/fordist_constraint_official_mpc_values.txt.gz | sed '1d' | awk '{print $1,$2,".",$3,$4,"PASS",$NF}' OFS="\t") > $DATA/MPC.vcf #NF because field number is variable
+    bgzip $DATA/MPC.vcf -c > $DATA/MPC.vcf.gz; tabix -f $DATA/MPC.vcf.gz
+fi
+
 #--------------------------------------------------------------------------------------
 # This is where the (CADD + CCR) files are generated.
 #--------------------------------------------------------------------------------------
@@ -143,6 +150,7 @@ while getopts ":t:g:c" opt; do
             python scorevars.py -x $DATA/gnomad-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
             python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
             python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
             ;;
@@ -157,6 +165,7 @@ while getopts ":t:g:c" opt; do
             python scorevars.py -x $DATA/clinvar-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
             python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
             python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
             ;;
@@ -214,10 +223,12 @@ python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA
 
 python caddintersect.py -c $DATA/gcCADD.vcf.gz -d $DATA/gcCADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/gccaddpatho tmp/gccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
 
+python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/MPC2patho tmp/MPC2benign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
+
 paste tmp/mcraepatho | python hist.py -o mcraeexac_dist.pdf #-t "$TITLE"
 paste tmp/mcrae2patho | python hist.py -o mcraegnomad_dist.pdf #-t "$TITLE"
 paste tmp/ccrbenign tmp/ccrpatho | python hist.py -o exac_dist.pdf -t "${TITLE[0]}"
 paste tmp/ccr2benign tmp/ccr2patho | python hist.py -o gnomad_dist.pdf -t "${TITLE[1]}"
 
-python roccurve.py -t "${TITLE[0]}" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign -d tmp/caddpatho tmp/caddbenign -r tmp/rvispatho tmp/rvisbenign -b tmp/eccaddpatho tmp/eccaddbenign -o exac_roc.pdf -n $EP $EB
-python roccurve.py -t "${TITLE[1]}" -g tmp/ccr2patho tmp/ccr2benign -p tmp/pli2patho tmp/pli2benign -d tmp/cadd2patho tmp/cadd2benign -r tmp/rvis2patho tmp/rvis2benign -b tmp/gccaddpatho tmp/gccaddbenign -o gnomad_roc.pdf -n $GP $GB
+python roccurve.py -t "${TITLE[0]}" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign -d tmp/caddpatho tmp/caddbenign -r tmp/rvispatho tmp/rvisbenign -b tmp/eccaddpatho tmp/eccaddbenign -m tmp/MPCpatho tmp/MPCbenign -o exac_roc.pdf -n $EP $EB
+python roccurve.py -t "${TITLE[1]}" -g tmp/ccr2patho tmp/ccr2benign -p tmp/pli2patho tmp/pli2benign -d tmp/cadd2patho tmp/cadd2benign -r tmp/rvis2patho tmp/rvis2benign -b tmp/gccaddpatho tmp/gccaddbenign -m tmp/MPC2patho tmp/MPC2benign -o gnomad_roc.pdf -n $GP $GB

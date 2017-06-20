@@ -18,6 +18,10 @@ parser.add_argument("-g", "--gnomad", help="ccr based on gnomad; pathogenic perc
 #parser.set_defaults(gnomad = ['tmp/ccr2patho','tmp/ccr2benign'])
 parser.add_argument("-r", "--rvis", help="pathogenic rvis score file, then benign rvis score file", nargs="*")
 #parser.set_defaults(rvis = ['tmp/rvispatho','tmp/rvisbenign'])
+parser.add_argument("-b", "--combined", help="CADD+CCR pathogenic score file, then CADD+CCR benign score file", nargs="*")
+#parser.set_defaults(combined = ['tmp/eccaddpatho','tmp/eccaddbenign'])
+parser.add_argument("-m", "--mpc", help="MPC pathogenic score file, then MPC benign score file", nargs="*")
+#parser.set_defaults(mpc = ['tmp/MPCpatho','tmp/MPCbenign'])
 parser.add_argument("-o", "--outfile", help="output file, preferably something roc.pdf")
 #parser.set_defaults(outfile = 'roc.pdf')
 parser.add_argument("-n", "--numvars", help="number of pathogenic and then number of benign variants", nargs="*")
@@ -26,8 +30,10 @@ args=parser.parse_args()
 ccr=args.ccr
 pli=args.pli
 cadd=args.cadd
+combined=args.combined
 gnomad=args.gnomad
 rvis=args.rvis
+mpc=args.mpc
 title=args.title
 outfile=args.outfile
 numvars=args.numvars
@@ -126,6 +132,43 @@ if rvis:
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='RVIS = ' + "%.3f " % (AUC), color = 'r')
     variants+="RVISp: "+str(rp)+"/"+str(pathoct)+"; RVISb: " +str(rb)+"/"+str(benignct)+"\n"
+if combined:
+    cp=0; cb=0
+    p=open(combined[0],'r') #pathogenic CCR+CADD
+    b=open(combined[1],'r') #benign CCR+CADD
+    y=[]; scores=[]
+    for line in p:
+        y.append(1)
+        scores.append(float(line))
+        cp+=1
+    for line in b:
+        y.append(0)
+        scores.append(float(line))
+        cb+=1
+    y=np.array(y); scores=np.array(scores)
+    fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
+    AUC=metrics.roc_auc_score(y, scores)
+    plt.plot(fpr,tpr,label='CADD+CCR = ' + "%.3f " % (AUC), color = 'c')
+    variants+="CADD+CCRp: "+str(cp)+"/"+str(pathoct)+"; CADD+CCRb: " +str(cb)+"/"+str(benignct)+"\n"
+
+if mpc:
+    mp=0; mb=0
+    p=open(mpc[0],'r') #pathogenic MPC
+    b=open(mpc[1],'r') #benign MPC
+    y=[]; scores=[]
+    for line in p:
+        y.append(1)
+        scores.append(float(line))
+        mp+=1
+    for line in b:
+        y.append(0)
+        scores.append(float(line))
+        mb+=1
+    y=np.array(y); scores=np.array(scores)
+    fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
+    AUC=metrics.roc_auc_score(y, scores)
+    plt.plot(fpr,tpr,label='MPC = ' + "%.3f " % (AUC), color = 'c')
+    variants+="MPCp: "+str(mp)+"/"+str(pathoct)+"; MPCb: " +str(mb)+"/"+str(benignct)+"\n"
 
 plt.title(title+"\n"+variants)
 plt.xlabel('False Positive Rate'); plt.ylabel('True Positive Rate')
