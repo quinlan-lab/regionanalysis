@@ -98,13 +98,11 @@ def pervariant(varianttuple):
     
     if "gnomad" in name:
         try:
-            if oinfo['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
+            if oinfo['AS_FilterStatus'].split(",")[0] not in ["PASS"]: # SEGDUP, LCR are debatable
                 return False
         except KeyError:
             pass
-        #if float(oinfo['AF']) < 0.01: #5% is too few not in exac
-        #    return False
-    if ofilter not in ["PASS", "SEGDUP", "LCR", "."]:
+    if ofilter not in ["PASS", "."]: # SEGDUP, LCR are debatable
         return False
     if clinvar:
         if not cfilter(oinfo, varstatus):
@@ -133,10 +131,10 @@ def pervariant(varianttuple):
         if ("benign" in varstatus and "clinvar" in name) or autopass or filterby == "-1":
             return True
         if filter:
-            if ffilter is None or ffilter in ["PASS", "SEGDUP", "LCR"]:
+            if ffilter is None or ffilter in ["PASS", "."]: # SEGDUP, LCR are debatable
                 if exacver == "gnomad":
                     try:
-                        if finfo['AS_FilterStatus'].split(",")[0] not in ["PASS", "SEGDUP", "LCR"]:
+                        if finfo['AS_FilterStatus'].split(",")[0] not in ["PASS"]: # SEGDUP, LCR are debatable
                             return True
                     except KeyError:
                         pass
