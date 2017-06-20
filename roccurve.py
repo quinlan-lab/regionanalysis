@@ -167,7 +167,7 @@ if mpc:
     y=np.array(y); scores=np.array(scores)
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
-    plt.plot(fpr,tpr,label='MPC = ' + "%.3f " % (AUC), color = 'c')
+    plt.plot(fpr,tpr,label='MPC = ' + "%.3f " % (AUC), color = 'm')
     variants+="MPCp: "+str(mp)+"/"+str(pathoct)+"; MPCb: " +str(mb)+"/"+str(benignct)+"\n"
 
 plt.title(title+"\n"+variants)
