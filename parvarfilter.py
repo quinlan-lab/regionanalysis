@@ -89,8 +89,8 @@ def cfilter(info, varstatus):
         return var
 
 def pervariant(varianttuple):
-    autopass = False
-    filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby,varpass = varianttuple
+    autopass = False; varpass = True
+    filter,dom,haplo,rec,varstatus,clinvar,name,original,filterby = varianttuple
     gene = ''
     oinfo = parseinfo(original[-1]); finfo = parseinfo(filterby[-1])
     ofilter = original[-2]; ffilter = filterby[-2]
@@ -107,7 +107,6 @@ def pervariant(varianttuple):
     if clinvar:
         if not cfilter(oinfo, varstatus):
             return False
-    
     try:
         ocsqs = [dict(zip(kcsq, c.split("|"))) for c in oinfo['CSQ'].split(",")]
     except KeyError:
@@ -155,22 +154,25 @@ def pervariant(varianttuple):
 
 # change code to group variants by original POS, REF, ALT and filter all duplicates of a variant if even one is filtered; probably need to remove the generator unfortunately
 # should be a large speed decrease
-varprev = None; varpass = True
+varprev = None; varpass = True; vars = []
 
 for variant in infile:
     fields = variant.strip().split("\t")
     original = fields[:8] #gnomad/clinvar
     filterby = fields[8:-1] #exac/gnomad, a set of variants to filter by, now :-1 because there is a -wo field
-    if varprev != original:
-        varpass = True
-    if varpass: 
-        if varprev is None:
-            pass # do nothing for the first pass because it will be done once it is the "previous variant"
-        else:
-            varpass = pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,varprev,filterprev,varpass))
-    if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varprev != original and varpass:
-        f.write("\t".join(varprev)+"\n")
+    if varprev is None:
+        pass
+    elif varprev != original:
+        for pvar in vars:
+            varprev, filterprev = pvar
+            varpass = pervariant((filter,dom,haplo,rec,varstatus,clinvar,name,varprev,filterprev))
+            if not varpass:
+                break
+        if varpass and varprev[0] != 'X' and varprev[0] != 'Y':
+            f.write("\t".join(varprev)+"\n")
+        vars=[]
     varprev = original; filterprev = filterby
+    vars.append((varprev, filterprev))
 
 if varprev != None and varprev[0] != 'X' and varprev[0] != 'Y' and varpass:
     f.write("\t".join(varprev)+"\n")
