@@ -95,6 +95,8 @@ if pli:
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='pLI = ' + "%.3f " % (AUC), color = 'g')
+    if len(pli)>2:
+        pp=pli[2]; pb=pli[3]
     variants+="pLIp: "+str(pp)+"/"+str(pathoct)+"; pLIb: " +str(pb)+"/"+str(benignct)+"\n"
 if cadd:
     cp=0; cb=0
@@ -131,6 +133,8 @@ if rvis:
     fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=1)
     AUC=metrics.roc_auc_score(y, scores)
     plt.plot(fpr,tpr,label='RVIS = ' + "%.3f " % (AUC), color = 'r')
+    if len(rvis)>2:
+        rp=rvis[2]; rb=rvis[3]
     variants+="RVISp: "+str(rp)+"/"+str(pathoct)+"; RVISb: " +str(rb)+"/"+str(benignct)+"\n"
 if combined:
     cp=0; cb=0

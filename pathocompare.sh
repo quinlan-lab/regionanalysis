@@ -53,6 +53,11 @@ if [ ! -s rvis.bed ]; then
     awk 'FNR==NR{genes[$1]=$2; next} {for (gene in genes) if (gene == $4) print $0, genes[gene]}' FS='\t' OFS='\t' tmp/RVIS_exac.txt tmp/Homo_sapiens37.bed > rvis.bed
 fi
 
+if [ ! -s ad.bed ]; then
+    sed 's/\"//g' exacresiduals/flatexome.bed | sed 's/;//g' > tmp/Homo_sapiens37.bed
+    awk 'FNR==NR{genes[$1]; next} {for (gene in genes) if (gene == $4) print $0}' FS='\t' OFS='\t' genescreens/ad_genecards_clean.txt tmp/Homo_sapiens37.bed > ad.bed
+fi
+
 if [ ! -s $DATA/CADD.vcf.gz ]; then
     cat caddheader <(sed '1,2d' $DATA/whole_genome_SNVs.tsv | awk '{print $1,$2,".",$3,$4,$5,$6}' OFS="\t") > $DATA/CADD.vcf # whole_genome_SNVs.tsv is the original CADD file
     bgzip -@ 12 -c $DATA/CADD.vcf > $DATA/CADD.vcf.gz; tabix $DATA/CADD.vcf.gz
@@ -152,7 +157,9 @@ while getopts ":t:g:c" opt; do
             python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
             python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
+            RB=$(bedtools intersect -b rvis.bed -a $DATA/gnomad-benign-exac.vcf.gz -u | wc -l)
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
+            PB=$(bedtools intersect -b rvis.bed -a $DATA/gnomad-benign-exac.vcf.gz -u | wc -l)
             ;;
         c)
             echo "-clinvar input triggered" >&2
@@ -167,7 +174,9 @@ while getopts ":t:g:c" opt; do
             python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
             python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
+            RB=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-benign-exac.vcf.gz -u | wc -l)
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
+            PB=$(bedtools intersect -b pli.bed -a $DATA/clinvar-benign-exac.vcf.gz -u | wc -l)
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -209,12 +218,18 @@ fi
 #--------------------------------------------------------------------------------------
 
 bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 5 > tmp/plipatho
+PP=$(bedtools intersect -b pli.bed -a $DATA/clinvar-patho-exac.vcf.gz -u | wc -l)
 bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 5 > tmp/pli2patho
+P2P=$(bedtools intersect -b pli.bed -a $DATA/clinvar-patho-gnomad.vcf.gz -u | wc -l)
 bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 5 > tmp/pli2benign
+P2B=$(bedtools intersect -b pli.bed -a $DATA/clinvar-benign-gnomad.vcf.gz -u | wc -l)
 
 bedtools intersect -a rvis.bed -b $DATA/clinvar-patho-exac.vcf.gz | cut -f 5 > tmp/rvispatho
+RP=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-patho-exac.vcf.gz -u | wc -l)
 bedtools intersect -a rvis.bed -b $DATA/clinvar-patho-gnomad.vcf.gz | cut -f 5 > tmp/rvis2patho
+R2P=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-patho-gnomad.vcf.gz -u | wc -l)
 bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-gnomad.vcf.gz | cut -f 5 > tmp/rvis2benign
+R2B=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-benign-gnomad.vcf.gz -u | wc -l)
 
 python scorevars.py -x $DATA/mcrae-patho-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/mcraepatho
 python scorevars.py -x $DATA/mcrae-patho-gnomad.vcf.gz -c exac-ccrs.bed.gz -a > tmp/mcrae2patho
@@ -230,5 +245,5 @@ paste tmp/mcrae2patho | python hist.py -o mcraegnomad_dist.pdf #-t "$TITLE"
 paste tmp/ccrbenign tmp/ccrpatho | python hist.py -o exac_dist.pdf -t "${TITLE[0]}"
 paste tmp/ccr2benign tmp/ccr2patho | python hist.py -o gnomad_dist.pdf -t "${TITLE[1]}"
 
-python roccurve.py -t "${TITLE[0]}" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign -d tmp/caddpatho tmp/caddbenign -r tmp/rvispatho tmp/rvisbenign -b tmp/eccaddpatho tmp/eccaddbenign -m tmp/MPCpatho tmp/MPCbenign -o exac_roc.pdf -n $EP $EB
-python roccurve.py -t "${TITLE[1]}" -g tmp/ccr2patho tmp/ccr2benign -p tmp/pli2patho tmp/pli2benign -d tmp/cadd2patho tmp/cadd2benign -r tmp/rvis2patho tmp/rvis2benign -b tmp/gccaddpatho tmp/gccaddbenign -m tmp/MPC2patho tmp/MPC2benign -o gnomad_roc.pdf -n $GP $GB
+python roccurve.py -t "${TITLE[0]}" -c tmp/ccrpatho tmp/ccrbenign -p tmp/plipatho tmp/plibenign $PP $PB -d tmp/caddpatho tmp/caddbenign -r tmp/rvispatho tmp/rvisbenign $RP $RB -b tmp/eccaddpatho tmp/eccaddbenign -m tmp/MPCpatho tmp/MPCbenign -o exac_roc.pdf -n $EP $EB
+python roccurve.py -t "${TITLE[1]}" -g tmp/ccr2patho tmp/ccr2benign -p tmp/pli2patho tmp/pli2benign $P2P $P2B -d tmp/cadd2patho tmp/cadd2benign -r tmp/rvis2patho tmp/rvis2benign $R2P $R2B -b tmp/gccaddpatho tmp/gccaddbenign -m tmp/MPC2patho tmp/MPC2benign -o gnomad_roc.pdf -n $GP $GB
