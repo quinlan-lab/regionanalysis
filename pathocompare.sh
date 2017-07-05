@@ -58,9 +58,13 @@ if [ ! -s ad.bed ]; then
     awk 'FNR==NR{genes[$1]; next} {for (gene in genes) if (gene == $4) print $0}' FS='\t' OFS='\t' genescreens/ad_genecards_clean.txt tmp/Homo_sapiens37.bed > ad.bed
 fi
 
-if [ ! -s $DATA/CADD.vcf.gz ]; then
+if [ ! -s $DATA/exomeCADD.vcf.gz ]; then
     cat caddheader <(sed '1,2d' $DATA/whole_genome_SNVs.tsv | awk '{print $1,$2,".",$3,$4,$5,$6}' OFS="\t") > $DATA/CADD.vcf # whole_genome_SNVs.tsv is the original CADD file
-    bgzip -@ 12 -c $DATA/CADD.vcf > $DATA/CADD.vcf.gz; tabix $DATA/CADD.vcf.gz
+    #bgzip -@ 12 -c $DATA/CADD.vcf > $DATA/CADD.vcf.gz; tabix $DATA/CADD.vcf.gz
+    bedtools intersect -a $DATA/CADD.vcf.gz -b exacresiduals/flatexome.bed -header > $DATA/CADD.exome.vcf
+    bedtools intersect -a $DATA/CADDindels.vcf.gz -b exacresiduals/flatexome.bed -header > $DATA/CADDindels.exome.vcf
+    cat <(grep "^#" $DATA/CADD.exome.vcf) <(cat <(grep -v "^#" $DATA/CADD.exome.vcf) <(grep -v "^#" $DATA/CADDindels.exome.vcf) | sort -k1,1 -k2,2n) | bgzip -c > $DATA/CADD.vcf.gz; tabix -f $DATA/CADD.vcf.gz # exome based CADD only
+    
 fi
 
 if [ ! -s $DATA/CADDindels.vcf.gz ]; then
@@ -79,18 +83,14 @@ fi
 # This is where the (CADD + CCR) files are generated.
 #--------------------------------------------------------------------------------------
 
-if [ ! -s $DATA/ecCADD.vcf.gz ] | [ ! -s $DATA/ecCADDindels.vcf.gz ]; then
-    cat <(zgrep "^#" $DATA/CADD.vcf.gz) <(bedtools intersect -a $DATA/CADD.vcf.gz -b exac-ccrs.bed.gz -wb -sorted | awk '{print $1,$2,$3,$4,$5,$6,$7+-10*log(1-$21/100)/log(10)}' FS='\t' OFS='\t') > $DATA/ecCADD.vcf
+if [ ! -s $DATA/ecCADD.vcf.gz ]; then
+    python caddintersect.py -r exac-ccrs.bed.gz $DATA/ecCADD.vcf -c $DATA/CADD.vcf.gz
     bgzip -@ 12 -c $DATA/ecCADD.vcf > $DATA/ecCADD.vcf.gz; tabix $DATA/ecCADD.vcf.gz
-    cat <(zgrep "^#" $DATA/CADDindels.vcf.gz) <(bedtools intersect -a $DATA/CADDindels.vcf.gz -b exac-ccrs.bed.gz -wb -sorted | awk '{print $1,$2,$3,$4,$5,$6,$7+-10*log(1-$21/100)/log(10)}' FS='\t' OFS='\t') > $DATA/ecCADDindels.vcf
-    bgzip -@ 12 -c $DATA/ecCADDindels.vcf > $DATA/ecCADDindels.vcf.gz; tabix $DATA/ecCADDindels.vcf.gz
 fi
 
-if [ ! -s $DATA/gcCADD.vcf.gz ] | [ ! -s $DATA/gcCADDindels.vcf.gz ]; then
-    cat <(zgrep "^#" $DATA/CADD.vcf.gz) <(bedtools intersect -a $DATA/CADD.vcf.gz -b gnomad-ccrs.bed.gz -wb -sorted | awk '{print $1,$2,$3,$4,$5,$6,$7+-10*log(1-$21/100)/log(10)}' FS='\t' OFS='\t') > $DATA/gcCADD.vcf
+if [ ! -s $DATA/gcCADD.vcf.gz ]; then
+    python caddintersect.py -r gnomad-ccrs.bed.gz $DATA/gcCADD.vcf -c $DATA/CADD.vcf.gz
     bgzip -@ 12 -c $DATA/gcCADD.vcf > $DATA/gcCADD.vcf.gz; tabix $DATA/gcCADD.vcf.gz
-    cat <(zgrep "^#" $DATA/CADDindels.vcf.gz) <(bedtools intersect -a $DATA/CADDindels.vcf.gz -b gnomad-ccrs.bed.gz -wb -sorted | awk '{print $1,$2,$3,$4,$5,$6,$7+-10*log(1-$21/100)/log(10)}' FS='\t' OFS='\t') > $DATA/gcCADDindels.vcf
-    bgzip -@ 12 -c $DATA/gcCADDindels.vcf > $DATA/gcCADDindels.vcf.gz; tabix $DATA/gcCADDindels.vcf.gz
 fi
 
 #--------------------------------------------------------------------------------------
@@ -153,9 +153,9 @@ while getopts ":t:g:c" opt; do
             EB=$(zgrep -v "^#" $DATA/gnomad-benign-exac.vcf.gz | wc -l)
             #bedtools intersect -a $DATA/gnomad-benign-exac.vcf.gz -b $DATA/ExAC.r1.vt.vep.vcf.gz -v > $DATA/gnomadbenigns.vcf.gz
             python scorevars.py -x $DATA/gnomad-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
-            python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
-            python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
-            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/gnomad-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
+            python caddintersect.py -c $DATA/CADD.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/caddpatho -b $DATA/gnomad-benign-exac.vcf.gz tmp/caddbenign  2>/dev/null #2>/dev/null is because the phred score is in the filter column
+            python caddintersect.py -c $DATA/ecCADD.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/eccaddpatho -b $DATA/gnomad-benign-exac.vcf.gz tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/MPCpatho -b $DATA/gnomad-benign-exac.vcf.gz tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             RB=$(bedtools intersect -b rvis.bed -a $DATA/gnomad-benign-exac.vcf.gz -u | wc -l)
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/gnomad-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
@@ -170,9 +170,9 @@ while getopts ":t:g:c" opt; do
             #exac
             cat <(grep '^#' $DATA/clinvar-benign-exac.vcf) <(grep -v '^#' $DATA/clinvar-benign-exac.vcf | sort -k1,1 -k2,2n) | bgzip -c > $DATA/clinvar-benign-exac.vcf.gz; tabix $DATA/clinvar-benign-exac.vcf.gz
             python scorevars.py -x $DATA/clinvar-benign-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/ccrbenign
-            python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/caddpatho tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
-            python caddintersect.py -c $DATA/ecCADD.vcf.gz -d $DATA/ecCADDindels.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/eccaddpatho tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
-            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz -b $DATA/clinvar-benign-exac.vcf.gz -f tmp/MPCpatho tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
+            python caddintersect.py -c $DATA/CADD.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/caddpatho -b $DATA/clinvar-benign-exac.vcf.gz tmp/caddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column
+            python caddintersect.py -c $DATA/ecCADD.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/eccaddpatho -b $DATA/clinvar-benign-exac.vcf.gz tmp/eccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+            python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-exac.vcf.gz tmp/MPCpatho -b $DATA/clinvar-benign-exac.vcf.gz tmp/MPCbenign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
             bedtools intersect -a rvis.bed -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/rvisbenign
             RB=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-benign-exac.vcf.gz -u | wc -l)
             bedtools intersect -a <(sed '1d' pli.bed) -b $DATA/clinvar-benign-exac.vcf.gz | cut -f 5 > tmp/plibenign
@@ -234,11 +234,11 @@ R2B=$(bedtools intersect -b rvis.bed -a $DATA/clinvar-benign-gnomad.vcf.gz -u | 
 python scorevars.py -x $DATA/mcrae-patho-exac.vcf.gz -c exac-ccrs.bed.gz -a > tmp/mcraepatho
 python scorevars.py -x $DATA/mcrae-patho-gnomad.vcf.gz -c exac-ccrs.bed.gz -a > tmp/mcrae2patho
 
-python caddintersect.py -c $DATA/CADD.vcf.gz -d $DATA/CADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/cadd2patho tmp/cadd2benign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+python caddintersect.py -c $DATA/CADD.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz tmp/cadd2patho -b $DATA/clinvar-benign-gnomad.vcf.gz tmp/cadd2benign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
 
-python caddintersect.py -c $DATA/gcCADD.vcf.gz -d $DATA/gcCADDindels.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/gccaddpatho tmp/gccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
+python caddintersect.py -c $DATA/gcCADD.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz tmp/gccaddpatho -b $DATA/clinvar-benign-gnomad.vcf.gz tmp/gccaddbenign 2>/dev/null #2>/dev/null is because the phred score is in the filter column so cyvcf2 spits an error that is ignorable over and over
 
-python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz -b $DATA/clinvar-benign-gnomad.vcf.gz -f tmp/MPC2patho tmp/MPC2benign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
+python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/clinvar-patho-gnomad.vcf.gz tmp/MPC2patho -b $DATA/clinvar-benign-gnomad.vcf.gz tmp/MPC2benign 2>/dev/null #2>/dev/null is because the code is there for CADD and formatting it like a proper VCF isn't important.
 
 paste tmp/mcraepatho | python hist.py -o mcraeexac_dist.pdf #-t "$TITLE"
 paste tmp/mcrae2patho | python hist.py -o mcraegnomad_dist.pdf #-t "$TITLE"

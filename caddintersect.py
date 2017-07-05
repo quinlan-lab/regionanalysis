@@ -30,21 +30,6 @@ cadd = VCF(cadd)
 if caddindels:
     caddindels = VCF(caddindels)
 
-def intersect(genes, variants, wb = True):
-    def killproc(p):
-        try:
-            p.kill()
-        except OSError:
-            pass
-    l = ['bedtools', 'intersect', '-a', variants, '-b', regions, '-sorted']
-    if wb:
-        l.append('-wb')
-    p1 = sp.Popen(l, stdout = sp.PIPE)
-    output,error = p1.communicate()
-    killproc(p1)
-    return output.strip()
-
-
 if pathogenic:
     patho = VCF(pathogenic[0])
     f1=open(pathogenic[1], 'w')
