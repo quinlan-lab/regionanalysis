@@ -1,18 +1,20 @@
 set -o xtrace
 
 if [ ! -s denovos/mpccontroldenovos.vcf.gz ] | [ ! -s denovos/mpcneurodevdenovos.vcf.gz ]; then
-#TODO: add code to make it a proper vcf, vep annotated and everything through varmake.sh
+#TODO: add code to make it a proper vcf, vep annotated and everything through varmake.sh TODO
     tr -s "" "\n" < ogfiles/mpcdenovos.txt | sed '1d' | cut -f -5,17 | awk '{print $1,$2,".",$3,$4,"100",$5,"MPC=" $6}' OFS='\t' | sort -k1,1 -k2,2n | grep 'control' | cat mpctrueheader - > denovos/mpccontroldenovos.vcf
-    tr -s "" "\n" < ogfiles/mpcdenovos.txt | sed '1d' | cut -f -5,17 | awk '{print $1,$2,".",$3,$4,"100",$5,"MPC=" $6}' OFS='\t' | sort -k1,1 -k2,2n | grep 'id_ddd' | cat mpctrueheader - > denovos/mpcneurodevdenovos.vcf
-    bgzip -c denovos/mpccontroldenovos.vcf > denovos/mpccontroldenovos.vcf.gz; tabix denovos/mpccontroldenovos.vcf.gz
-    bgzip -c denovos/mpcneurodevdenovos.vcf > denovos/mpcneurodevdenovos.vcf.gz; tabix denovos/mpcneurodevdenovos.vcf.gz
+    bash varmake.sh denovos/mpccontroldenovos.vcf
+    tr -s "" "\n" < ogfiles/mpcdenovos.txt | sed '1d' | cut -f -5,17 | awk '{print $1,$2,".",$3,$4,"100",$5,"MPC=" $6}' OFS='\t' | sort -k1,1 -k2,2n | grep -v 'control' | cat mpctrueheader - > denovos/mpcneurodevdenovos.vcf
+    bash varmake.sh denovos/mpcneurodevdenovos.vcf
+    #bgzip -c denovos/mpccontroldenovos.vcf > denovos/mpccontroldenovos.vcf.gz; tabix denovos/mpccontroldenovos.vcf.gz
+    #bgzip -c denovos/mpcneurodevdenovos.vcf > denovos/mpcneurodevdenovos.vcf.gz; tabix denovos/mpcneurodevdenovos.vcf.gz
 fi
 
 if [ ! -s tmp/neurodev-gnomad.txt ] | [ ! -s tmp/control-gnomad.txt ] ; then
-    #bedtools intersect -a denovos/mpcneurodevdenovos.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wao -sorted > tmp/neurodev-gnomad.txt
-    #bedtools intersect -a denovos/mpccontroldenovos.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wao -sorted > tmp/control-gnomad.txt
-    bedtools intersect -a denovos/mpcneurodevdenovos.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -v -header > tmp/neurodev-patho-gnomad.vcf
-    bedtools intersect -a denovos/mpccontroldevdenovos.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -v -header > tmp/control-benign-gnomad.vcf
+    bedtools intersect -a $DATA/mpcneurodevdenovos-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wao -sorted > tmp/neurodev-gnomad.txt
+    bedtools intersect -a $DATA/mpccontroldenovos-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -wao -sorted > tmp/control-gnomad.txt
+    #bedtools intersect -a $DATA/mpcneurodevdenovos-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -v -header > tmp/neurodev-patho-gnomad.vcf
+    #bedtools intersect -a $DATA/mpccontroldenovos-vep-vt.vcf.gz -b $DATA/gnomad-vep-vt.vcf.gz -v -header > tmp/control-benign-gnomad.vcf
     cat <(grep '^#' tmp/neurodev-patho-gnomad.vcf) <(grep -v '^#' tmp/neurodev-patho-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > tmp/neurodev-patho-gnomad.vcf.gz; tabix tmp/neurodev-patho-gnomad.vcf.gz
     cat <(grep '^#' tmp/control-benign-gnomad.vcf) <(grep -v '^#' tmp/control-benign-gnomad.vcf | sort -k1,1 -k2,2n) | bgzip -c > tmp/control-benign-gnomad.vcf.gz; tabix tmp/control-benign-gnomad.vcf.gz
 fi
@@ -27,3 +29,5 @@ python caddintersect.py -c $DATA/MPC.vcf.gz -p tmp/neurodev-patho-gnomad.vcf.gz 
 
 paste tmp/MPC2benign tmp/MPC2patho | python hist.py -o mpc_denovo_dist.pdf -t "MPC (based on ExAC v1)" #ExAC v1 based MPC
 paste tmp/ccr2benign tmp/ccr2patho | python hist.py -o ccr_denovo_dist.pdf -t "gnomad based CCR" # gnomad based CCR
+
+#python caddintersect.py -c $DATA/MPC.vcf.gz -p $DATA/mcrae-patho-gnomad.vcf.gz tmp/MPCmcrae 2>/dev/null
