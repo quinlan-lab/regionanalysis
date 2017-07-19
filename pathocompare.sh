@@ -41,6 +41,7 @@ if [ ! -s exac-ccrs.bed.gz ] | [ ! -s gnomad-ccrs.bed.gz ]; then
 fi
 
 if [ ! -s pli.bed ]; then
+    #wget -P $DATA ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3.1/manuscript_data/forweb_cleaned_exac_r03_march16_z_data_pLI.txt.gz; gunzip $DATA/forweb_cleaned_exac_r03_march16_z_data_pLI.txt
     #bedtools groupby -i $DATA/forweb_cleaned_exac_r03_march16_z_data_pLI.txt -g 3,5,6,2 -c 20 -o collapse | tr -s ' ' '\t' > pli.bed
     sed 's/\"//g' exacresiduals/flatexome.bed | sed 's/;//g' > tmp/Homo_sapiens37.bed
     cut -f 2,20 $DATA/forweb_cleaned_exac_r03_march16_z_data_pLI.txt | sed '1d' > tmp/pLI_exac.txt
@@ -72,10 +73,11 @@ if [ ! -s $DATA/CADDindels.vcf.gz ]; then
     bgzip -@ 12 -c $DATA/CADDindels.vcf > $DATA/CADDindels.vcf.gz; tabix $DATA/CADDindels.vcf.gz
 fi
 
-if [ ! -s $DATA/fordist_constraint_official_mpc_values.txt.gz ]; then
+if [ ! -s $DATA/fordist_constraint_official_mpc_values.txt.gz ] | [ ! -s $DATA/MPC.vcf.gz ]; then
     #wget -P $DATA ftp://ftp.broadinstitute.org/pub/ExAC_release/release1/regional_missense_constraint/fordist_constraint_official_mpc_values.txt.gz
     #wget -P $DATA ftp://ftp.broadinstitute.org/pub/ExAC_release/release1/regional_missense_constraint/fordist_constraint_official_mpc_values.txt.gz.tbi
-    cat mpcheader <(zcat $DATA/fordist_constraint_official_mpc_values.txt.gz | sed '1d' | awk '{print $1,$2,".",$3,$4,"PASS",$NF}' OFS="\t") > $DATA/MPC.vcf #NF because field number is variable
+    cat mpcheader2 <(zcat $DATA/fordist_constraint_official_mpc_values.txt.gz | sed '1d' | awk '{print $1,$2,".",$3,$4,"100","PASS","MPC=" $NF}' OFS='\t') > $DATA/MPC.vcf #NF because field number is variable
+    #cat mpcheader <(zcat $DATA/fordist_constraint_official_mpc_values.txt.gz | sed '1d' | awk '{print $1,$2,".",$3,$4,"PASS",$NF}' OFS="\t") > $DATA/MPC.vcf #NF because field number is variable
     bgzip $DATA/MPC.vcf -c > $DATA/MPC.vcf.gz; tabix -f $DATA/MPC.vcf.gz
 fi
 
