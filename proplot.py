@@ -87,7 +87,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     """
     widths = [float(e[1] - e[0]) for e in exons]
     fig = plt.figure(figsize=(20, 6))
-    height_ratios =  (1, 1) if density is None else (12, 1, 6)
+    height_ratios =  (1, 1) if density is None else (6, 1.5, 6)
     sgs = gridspec.GridSpec(3, 1, height_ratios=[12, 2, 1], hspace=0.0)
     gs = gridspec.GridSpecFromSubplotSpec(2 if density is None else 3, len(exons), width_ratios=widths,
             height_ratios=height_ratios, hspace=0.0, subplot_spec=sgs[0])
@@ -125,15 +125,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
 
         #lines = []
         #colors = []
-        x, y, z = [], [], []
-        cmap = ListedColormap(['b','r'])
-        norm = BoundaryNorm([0, 80, 100], cmap.N)
-        for s, e, height in ctr:
-            if height > 80:
-                color='red'
-            else:
-                color='navy'
-            ax.plot((s,e), (height,height), color=color)
+        #x, y, z = [], [], []
             
             #x.append(s); y.append(e); z.append(height)
             # lines.append([(s, 0), (e, height)])
@@ -161,8 +153,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         #axv.set_ylim(ymax=2)
 
         if len(vs) > 0:
-            markers, stemlines, baseline = axv.stem([v[0] for v in vs], -np.log10([v[1]
-                for v in vs]), linefmt='-', markerfmt=' ', lw=0.5)
+            markers, stemlines, baseline = axv.stem([v[0] for v in vs], -np.log10([v[1] for v in vs]), linefmt='-', markerfmt=' ', lw=0.01)
             plt.setp(baseline, 'linewidth', 0)
             plt.setp(stemlines, 'color', 'black', 'zorder', 0, 'alpha', 0.7)
 
@@ -171,15 +162,25 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                     'markersize', 4)
             axv.set_ylim(0,max(-np.log10([v[1] for v in vs]))+.5)
 
-        #axe = fig.add_subplot(gs[2, i], sharex=ax)
-        # if len(pop) > 0:
-            # markers, stemlines, baseline = axv.stem([v[0] for v in pop], -np.log10([v[1] for v in pop]), '--' )
-            # plt.setp(baseline, 'linewidth', 0)
-            # plt.setp(stemlines, 'color', opts['pop_variant_color'], 'zorder', -1, 'alpha', 0.7)
-            # plt.setp(markers, 'color', opts['pop_variant_color'], 'zorder', 1,
-                    # 'alpha', 0.7, 'markeredgecolor', '#666666', 'mew', 1,
-                    # 'markersize', 4)
+        axd = fig.add_subplot(gs[0, i], sharex=ax)#, sharey=ax)
+        if len(pop) > 0:
+            afs=[x[1] for x in pop]
+            alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
+            alphas=[1 if k > 1 else k for k in alphas]
+            for index, v in enumerate(pop):
+                axd.axvline(x=v[0], ymin=0, ymax=100, lw=1, color='g', alpha=alphas[index])
+                #markers, stemlines, baseline = axd.stem([v[0]], [100], linefmt='-', markerfmt=' ', lw=0.05, color='g', alpha=alphas[index])
+                #plt.setp(baseline, 'linewidth', 0)
+                #plt.setp(stemlines, 'color', opts['pop_variant_color'], 'zorder', -1) # may have to plot each stem in a loop to change alphas
+                #plt.setp(markers, 'color', opts['pop_variant_color'], 'zorder', 1,
+                #        'markeredgecolor', '#666666', 'mew', 1,
+                #        'markersize', 4)
 
+        cmap = ListedColormap(['b','r'])
+        norm = BoundaryNorm([0, 80, 100], cmap.N)
+        for s, e, height in ctr:
+            if height < 80: continue #only show constraint above our cutoff
+            ax.plot((s,e), (height,height), color='r')
         if i == 0:
             ax.set_ylabel('Constraint')
             #axv.set_ylabel("Pathos") # common and pathogenics
@@ -211,20 +212,20 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         #print colors.keys()
         #ax3.table(cellText=colors.keys(),cellColours=colors.values())
 
-        if not density:
-            continue
-        idensity = np.zeros(exon[1] - exon[0])
-        for d in density:
-            if d >= exon[0] and d < exon[1]:
-                idensity[d-exon[0]]+=1
-        for j, d in enumerate(idensity):
-            if i+1%opts['density_window'] == 0:
-                idensity[i-opts['density_window']:i] = 0
-        idensity = np.convolve(idensity, np.ones(opts['density_window']) / float(opts['density_window']), mode='same')
-        axd = fig.add_subplot(gs[0, i], sharex=ax) #1,i
-        axd.plot(np.arange(exon[0], exon[1]), idensity)
-        if i == 0:
-            axd.set_ylabel('Variant density')
+        #if not density:
+        #    continue
+        #idensity = np.zeros(exon[1] - exon[0])
+        #for d in density:
+        #    if d >= exon[0] and d < exon[1]:
+        #        idensity[d-exon[0]]+=1
+        #for j, d in enumerate(idensity):
+        #    if i+1%opts['density_window'] == 0:
+        #        idensity[i-opts['density_window']:i] = 0
+        #idensity = np.convolve(idensity, np.ones(opts['density_window']) / float(opts['density_window']), mode='same')
+        #axd = fig.add_subplot(gs[0, i], sharex=ax) #1,i
+        #axd.plot(np.arange(exon[0], exon[1]), idensity)
+        #if i == 0:
+        #    axd.set_ylabel('Variant density')
         axd.set_yticks([])
         axd.set_xticks([])
 
@@ -238,7 +239,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     #gs.tight_layout(fig, h_pad=0)
     #plt.tight_layout()
     #return fig, gs
-    plt.savefig('proplot.pdf', bbox_inches='tight')
+    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/proplot.pdf', bbox_inches='tight')
 
 
 def get_control_genome_positions(control_vcf, region, query_transcript):
@@ -255,7 +256,7 @@ def get_control_genome_positions(control_vcf, region, query_transcript):
             if v.INFO['AC'] < 1: continue
             if curr_transcript == query_transcript:
                 # TODO: track actual AAF
-                control_positions.append((v.POS, v.INFO['AF']))
+                control_positions.append((v.POS, v.INFO['AF'])) # can do AC
                 densities.append(v.POS)
     return control_positions, densities
 
