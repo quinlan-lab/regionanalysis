@@ -46,11 +46,12 @@ for pfam in pfams:
             print vals, binar
             axarr[ct].plot(binar, vals)
             axarr[ct].set_title(pfam)
+            axarr[ct].set_xlim(10,100)
             ct+=1
     stats.seek(0)
 #[make_axes_visible(i) for i in axarr]
 plt.tight_layout()
-plt.subplots_adjust(hspace=0.5)
+plt.subplots_adjust(hspace=0.7)
 [i.set_xlabel('CCR %ile') for i in axarr]
 [i.set_ylabel('Frequency') for i in axarr]
 plt.savefig(args.output, bbox_inches='tight')
