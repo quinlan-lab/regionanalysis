@@ -69,7 +69,7 @@ def get_pfam(pfam, transcript, region):
     return pfams
 
 def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=None,
-        density=None,
+        density=None, filename=None,
         opts={'constraint_color': (0.7, 0.7, 0.7),
               'patho_variant_color': '#ff0000',
               'exon_color': (0.8,0.8, 0.8),
@@ -86,9 +86,9 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     >>> plt.show()
     """
     widths = [float(e[1] - e[0]) for e in exons]
-    fig = plt.figure(figsize=(20, 6))
-    height_ratios = (3, 1)
-    sgs = gridspec.GridSpec(3, 1, height_ratios=[4, 2, 1], hspace=0.0)
+    fig = plt.figure(figsize=(20, 4))
+    height_ratios = (1, 1)
+    sgs = gridspec.GridSpec(3, 1, height_ratios=[2, 2, 1], hspace=0.0)
     gs = gridspec.GridSpecFromSubplotSpec(2, len(exons), width_ratios=widths,
             height_ratios=height_ratios, hspace=0.0, subplot_spec=sgs[0])
     gs2 = gridspec.GridSpecFromSubplotSpec(1, len(exons), width_ratios=widths, subplot_spec=sgs[1])
@@ -109,6 +109,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                 doms.append((dom1,dom2,dom3))
         if i == 0:
             ax_cons = plt.subplot(gs[0, i])
+            ax_cons.set_yticks([80,85,90,95,100])
             #ax_gnomad = plt.twiny(ax=ax_cons)
         else:
             ax_cons = fig.add_subplot(gs[0, i])
@@ -117,7 +118,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
 
         vs = [v for v in patho_variants if exon[0] <= v[0] <= exon[1]]
         pop = [v for v in population_variants if exon[0] <= v[0] <= exon[1]]
-        ctr = [v for v in constraint if exon[0] <= v[0] <= exon[1]]
+        ctr = [v for v in constraint if exon[0] <= v[0]+1 <= exon[1]] # GTF format (Exons) are 1-based, regions are in 0-based half-open BED format
 
         xs, ys = [], [] # line width controls height of heatmap
 
@@ -161,6 +162,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             ax_patho.set_ylim(0,max(-np.log10([v[1] for v in vs]))+.5)
 
         #axd = fig.add_subplot(gs[0, i], sharex=ax_cons)#, sharey=ax_cons)
+        ax_cons.set_ylim(80,100) #80 is our low bar for constraint
         if len(pop) > 0:
             afs=[x[1] for x in pop]
             alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
@@ -178,13 +180,14 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         norm = BoundaryNorm([0, 80, 100], cmap.N)
         for s, e, height in ctr:
             if height < 80: continue #only show constraint above our cutoff
-            ax_cons.plot((s,e), (height,height), color='r')
+            color = ('r' if height >= 80 else 'b')
+            ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
             ax_cons.set_ylabel('Constraint')
         else:
             plt.setp(ax_cons.get_yticklabels(), visible=False)
             plt.setp(ax_patho.get_yticklabels(), visible=False)
-        ax_cons.set_yticks([])
+            ax_cons.set_yticks([])
         ax_patho.set_yticks([])
         ax_patho.set_xticks([])
 
@@ -229,14 +232,14 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     ax_leg = fig.add_subplot(gs3[0, 0]) # leg = legend
     ax_leg.set_ylim(0,1)
     ax_leg.set_xlim(0,1)
-    rainbow_text(0,0.5,colors.keys(),colors.values(),ax=ax_leg, weight="semibold")#ax3.text(0.5,0.5,)
+    rainbow_text(0,1,colors.keys(),colors.values(),ax=ax_leg, weight="semibold")#ax3.text(0.5,0.5,)
     ax_leg.set_yticks([])
     ax_leg.set_xticks([])
     sns.despine(left=True, bottom=True)
     #gs.tight_layout(fig, h_pad=0)
     #plt.tight_layout()
     #return fig, gs
-    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/proplot.pdf', bbox_inches='tight')
+    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/' + filename + '.pdf', bbox_inches='tight')
 
 
 def get_control_genome_positions(control_vcf, region, query_transcript):
@@ -245,14 +248,14 @@ def get_control_genome_positions(control_vcf, region, query_transcript):
     for v in control_vcf(region):
         if v.var_type != 'snp': continue
         effects = [e.split('|') for e in v.INFO.get('CSQ').split(',')]
+        if v.FILTER is not None: continue
         for e in effects:
             curr_transcript = e[6]
             impact = e[1]
-            if impact not in ['missense_variant']:
+            if 'missense_variant' not in impact:
                 continue
             if v.INFO['AC'] < 1: continue
             if curr_transcript == query_transcript:
-                # TODO: track actual AAF
                 control_positions.append((v.POS, v.INFO['AF'])) # can do AC
                 densities.append(v.POS)
     return control_positions, densities
@@ -292,11 +295,8 @@ def get_ccrs(ccr, region):
         s = int(r[1])
         e = int(r[2])
         val = float(r[13])
-        #if val != 0: ccrs.append((s,e,val))
         ccrs.append((s,e,val))
     return ccrs
-
-
 
 def main():
     parser=argparse.ArgumentParser()
@@ -307,6 +307,7 @@ def main():
     parser.add_argument("-d", "--pfam", dest='pfam', help="bed of Pfam domains (d)")
     parser.add_argument("-t", "--transcript", dest='transcript', help="Transcript to plot")
     parser.add_argument("-r", "--region", dest='region', help="Region to query")
+    parser.add_argument("-f", "--filename", dest='filename', help="Name of output file")
 
     args=parser.parse_args()
 
@@ -318,7 +319,7 @@ def main():
     exons = get_exons(args.gff, args.transcript, args.region)
     ccrs = get_ccrs(args.ccr, args.region)
     pfams = get_pfam(args.pfam, args.transcript, args.region)
-    geneplot(exons, pfams, patho_variants, population_variants, constraint=ccrs, density=density)
+    geneplot(exons, pfams, patho_variants, population_variants, constraint=ccrs, density=density, filename=args.filename)
 
 if __name__ == "__main__":
     main()
