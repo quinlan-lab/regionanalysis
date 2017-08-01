@@ -69,7 +69,7 @@ def get_pfam(pfam, transcript, region):
     return pfams
 
 def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=None,
-        density=None, filename=None,
+        density=None, coverage=None, repeats=None, filename=None,
         opts={'constraint_color': (0.7, 0.7, 0.7),
               'patho_variant_color': '#ff0000',
               'exon_color': (0.8,0.8, 0.8),
@@ -86,20 +86,19 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     >>> plt.show()
     """
     widths = [float(e[1] - e[0]) for e in exons]
-    fig = plt.figure(figsize=(20, 4))
-    height_ratios = (1, 1)
-    sgs = gridspec.GridSpec(3, 1, height_ratios=[2, 2, 1], hspace=0.0)
-    gs = gridspec.GridSpecFromSubplotSpec(2, len(exons), width_ratios=widths,
-            height_ratios=height_ratios, hspace=0.0, subplot_spec=sgs[0])
-    gs2 = gridspec.GridSpecFromSubplotSpec(1, len(exons), width_ratios=widths, subplot_spec=sgs[1])
+    fig = plt.figure(figsize=(20, 2))
+    #height_ratios = (1, 1)
+    sgs = gridspec.GridSpec(3, 1, height_ratios=[0.5, 1, 1], hspace=0.0)
+    gs = gridspec.GridSpecFromSubplotSpec(1, len(exons), width_ratios=widths, subplot_spec=sgs[0]) # 2, len
+            #height_ratios=height_ratios, hspace=0.0)
+    gs2 = gridspec.GridSpecFromSubplotSpec(2, len(exons), width_ratios=widths, subplot_spec=sgs[1], hspace=0.3) # 1, len
     gs3 = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=sgs[2])
-
-    ncols = len(exons)
 
     doms=[]
     fams=set()
     colorlist = ["tomato", "dodgerblue", "darkorchid", "mediumvioletred", "coral", "black", "skyblue", "sienna", "gold"]
     colors={}; ct=0
+    from matplotlib.ticker import FormatStrFormatter
     for i, exon in enumerate(exons):
         for j, domain in enumerate(pfams):
             if overlaps(exon[0], exon[1], domain[0], domain[1]):
@@ -107,68 +106,37 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                 dom2 = (domain[1] if exon[1] > domain[1] else exon[1])
                 dom3 = domain[2]
                 doms.append((dom1,dom2,dom3))
-        if i == 0:
-            ax_cons = plt.subplot(gs[0, i])
-            ax_cons.set_yticks([80,85,90,95,100])
-            #ax_gnomad = plt.twiny(ax=ax_cons)
-        else:
-            ax_cons = fig.add_subplot(gs[0, i])
-            #ax_gnomad = plt.twiny(ax=ax_cons)
             
-
+        ax_exon = fig.add_subplot(gs2[0, i])# sharex=ax_cons)
+        ax_exon.set_xticks([])
+        ax_exon.set_yticks([])
+        ax_exon.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+        ax_exon.set_ylim(0,1)
+        ax_exon.set_xlim(exon[0],exon[1])
+        #if i == 0:
+        #    ax_exon.set_ylabel('Exons')
+        ax_exon.axhspan(.6, 1, xmin=0.001, xmax=0.999, edgecolor=opts['exon_color'], facecolor = 'none',
+            lw=1, zorder=10) # zorder makes sure it's always on top
+        
         vs = [v for v in patho_variants if exon[0] <= v[0] <= exon[1]]
         pop = [v for v in population_variants if exon[0] <= v[0] <= exon[1]]
         ctr = [v for v in constraint if exon[0] <= v[0]+1 <= exon[1]] # GTF format (Exons) are 1-based, regions are in 0-based half-open BED format
-
+        cov = [v for v in coverage if exon[0] <= v[0] <= exon[1]]
+        
         xs, ys = [], [] # line width controls height of heatmap
 
-        #lines = []
-        #colors = []
-        #x, y, z = [], [], []
-            
-            #x.append(s); y.append(e); z.append(height)
-            # lines.append([(s, 0), (e, height)])
-            # if height < 80:
-                # colors.append((0, 0, 1, height/100))
-            # elif height < 100:
-                # colors.append((1, 0, 0, height/100))
-            #xs.extend([s, e])
-            #ys.extend([height, height])
-        #x = np.array(x); y = np.array(y); z = np.array(z)
-        #points = np.array([x,y]).T.reshape(-1,1,2)
-        #segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        #lc = mc.LineCollection(segments, cmap=cmap, norm=norm)
-        #lc.set_array(z)
-        #lc.set_linewidth(3)
-        #lc = mc.LineCollection(lines, colors=colors, linewidths=3) #300 line width controls height of heatmap
-        #ax.set_ylim(0,20)
-        #ax.add_collection(lc)
-        #ax.autoscale_view()
-        #ax.step(xs, ys, color=opts['constraint_color'])
-        #ax.plot([s, e], [height, height], color=opts['constraint_color'])
-
-        ax_patho = fig.add_subplot(gs[1, i], sharex=ax_cons)
-        #axv = fig.add_subplot(gs[1 if density is None else 2, i], sharex=ax_cons)
-        #axv.set_ylim(ymax=2)
-
-        if len(vs) > 0:
-            markers, stemlines, baseline = ax_patho.stem([v[0] for v in vs], -np.log10([v[1] for v in vs]), linefmt='-', markerfmt=' ', lw=0.01)
-            plt.setp(baseline, 'linewidth', 0)
-            plt.setp(stemlines, 'color', 'black', 'zorder', 0, 'alpha', 0.7)
-
-            plt.setp(markers, 'color', opts['patho_variant_color'], 'zorder', 2,
-                    'alpha', 0.7, 'markeredgecolor', '#666666', 'mew', 1,
-                    'markersize', 4)
-            ax_patho.set_ylim(0,max(-np.log10([v[1] for v in vs]))+.5)
-
-        #axd = fig.add_subplot(gs[0, i], sharex=ax_cons)#, sharey=ax_cons)
+        ax_cons = fig.add_subplot(gs[0, i],sharex=ax_exon)
+        ax_cons.set_yticks([80,90,100])
         ax_cons.set_ylim(80,100) #80 is our low bar for constraint
         if len(pop) > 0:
             afs=[x[1] for x in pop]
             alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
             alphas=[1 if k > 1 else k for k in alphas]
             for index, v in enumerate(pop):
-                ax_cons.axvline(x=v[0], ymin=0, ymax=100, lw=1, color='g', alpha=alphas[index])
+                color = 'blue'; alpha=0.1; lw=1
+                if v[0] == 62062708:
+                    color='red'; alpha=1; lw=3; print exon[0], exon[1]
+                ax_cons.axvline(x=v[0], ymin=0, ymax=100, lw=lw, color=color, alpha=alpha) #alpha=alphas[index])
                 #markers, stemlines, baseline = axd.stem([v[0]], [100], linefmt='-', markerfmt=' ', lw=0.05, color='g', alpha=alphas[index])
                 #plt.setp(baseline, 'linewidth', 0)
                 #plt.setp(stemlines, 'color', opts['pop_variant_color'], 'zorder', -1) # may have to plot each stem in a loop to change alphas
@@ -176,39 +144,45 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                 #        'markeredgecolor', '#666666', 'mew', 1,
                 #        'markersize', 4)
 
-        cmap = ListedColormap(['b','r'])
-        norm = BoundaryNorm([0, 80, 100], cmap.N)
         for s, e, height in ctr:
             if height < 80: continue #only show constraint above our cutoff
-            color = ('r' if height >= 80 else 'b')
+            color = ('k' if height >= 80 else 'b')
             ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
             ax_cons.set_ylabel('Constraint')
         else:
             plt.setp(ax_cons.get_yticklabels(), visible=False)
-            plt.setp(ax_patho.get_yticklabels(), visible=False)
+            #plt.setp(ax_patho.get_yticklabels(), visible=False)
             ax_cons.set_yticks([])
-        ax_patho.set_yticks([])
-        ax_patho.set_xticks([])
+        # ax_patho.set_yticks([])
+        # ax_patho.set_xticks([])
 
-        ax_exon = fig.add_subplot(gs2[0, i], sharex=ax_cons)
-        ax_exon.set_yticks([])
-        ax_exon.set_xticks([])
-        ax_exon.set_ylim(0,1)
-        #if i == 0:
-        #    ax_exon.set_ylabel('Exons')
-        ax_exon.axhspan(.6, 1, xmin=0.001, xmax=0.999, edgecolor=opts['exon_color'], facecolor = 'none',
-                lw=2.5, zorder=9) # zorder makes sure it's always on top
+        
+        # ax_patho = fig.add_subplot(gs[1, i], sharex=ax_cons)
+
+        if len(vs) > 0:
+            #markers, stemlines, baseline = ax_patho.stem([v[0] for v in vs], -np.log10([v[1] for v in vs]), linefmt='-', markerfmt=' ', lw=0.01)
+            for index, v in enumerate(vs):
+                ax_exon.axvline(x=v[0], ymin=.62, ymax=1, color='k', lw=1, alpha=1, zorder=8)
+            #plt.setp(baseline, 'linewidth', 0)
+            #plt.setp(stemlines, 'color', 'black', 'zorder', 0, 'alpha', 0.7)
+
+            #plt.setp(markers, 'color', opts['patho_variant_color'], 'zorder', 2,
+            #        'alpha', 0.7, 'markeredgecolor', '#666666', 'mew', 1,
+            #        'markersize', 4)
+            #ax_patho.set_ylim(0,max(-np.log10([v[1] for v in vs]))+.5)
+
         for s, e, fam in doms:
             if not overlaps(s,e,exon[0],exon[1]):continue
             if fam not in fams:
-                colors[fam] = colorlist[ct]
+                #colors[fam] = colorlist[ct]
+                colors[fam] = 'lightgrey'
                 ct+=1
                 fams.add(fam) 
             xmin=(s-exon[0])/float(exon[1]-exon[0])
             xmax=1-(exon[1]-e)/float(exon[1]-exon[0])
             ax_exon.axhspan(.6, 1, xmin=xmin, xmax=xmax, edgecolor=opts['exon_color'], facecolor = colors[fam],
-                lw=2.5, zorder=10) # zorder makes sure it's always on top
+                lw=1, zorder=9, alpha=0.5) # zorder makes sure it's always on top
         #print colors.keys()
         #ax_leg.table(cellText=colors.keys(),cellColours=colors.values())
 
@@ -228,7 +202,15 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         #    axd.set_ylabel('Variant density')
         #axd.set_yticks([])
         #axd.set_xticks([])
-
+        
+        ax_coverage = fig.add_subplot(gs2[1, i], sharex=ax_cons)
+        ax_coverage.plot([c[0] for c in cov], [c[1] for c in cov], color='g')
+        ax_coverage.set_yticks([])
+        ax_coverage.set_ylim(0,1)
+    
+        for s, e in repeats:
+            if not overlaps(s,e,exon[0],exon[1]): continue
+            ax_coverage.axhline(y=.5, xmin=s, xmax=e, lw=1.5, color='r')
     ax_leg = fig.add_subplot(gs3[0, 0]) # leg = legend
     ax_leg.set_ylim(0,1)
     ax_leg.set_xlim(0,1)
@@ -298,6 +280,35 @@ def get_ccrs(ccr, region):
         ccrs.append((s,e,val))
     return ccrs
 
+def get_coverage(region):
+    chrom = region.split(":")[0]
+    coverage = '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/data/exacv2.chr' + chrom + '.cov.txt.gz'
+    tb = tabix.open(coverage)
+    cov = [] 
+    for r in tb.querys(region):
+        pos = int(r[1])
+        val = float(r[6]) # coverage at 10x
+        if val < 0.5: # our CCR cutoff
+            cov.append((pos,val))
+    return cov
+
+def get_repeats(region):
+    chrom = region.split(":")[0]
+    self = '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/data/self-chains.gt90.bed.gz'
+    seg = '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/data/hgsegmental.bed.gz' 
+    tb = tabix.open(self)
+    rep = [] 
+    for r in tb.querys(region):
+        s = int(r[1])
+        e = int(r[2])
+        rep.append((s,e))
+    tb = tabix.open(seg)
+    for r in tb.querys(region):
+        s = int(r[1])
+        e = int(r[2])
+        rep.append((s,e))
+    return rep
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("-b", "--ccr", dest='ccr', help="CCR file")
@@ -319,7 +330,9 @@ def main():
     exons = get_exons(args.gff, args.transcript, args.region)
     ccrs = get_ccrs(args.ccr, args.region)
     pfams = get_pfam(args.pfam, args.transcript, args.region)
-    geneplot(exons, pfams, patho_variants, population_variants, constraint=ccrs, density=density, filename=args.filename)
+    cov = get_coverage(args.region)
+    rep = get_repeats(args.region)
+    geneplot(exons, pfams, patho_variants, population_variants, constraint=ccrs, density=density, coverage=cov, repeats=rep, filename=args.filename)
 
 if __name__ == "__main__":
     main()
