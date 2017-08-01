@@ -91,14 +91,13 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     sgs = gridspec.GridSpec(3, 1, height_ratios=[0.5, 1, 1], hspace=0.0)
     gs = gridspec.GridSpecFromSubplotSpec(1, len(exons),subplot_spec=sgs[0], width_ratios=widths) # 2, len
             #height_ratios=height_ratios, hspace=0.0)
-    gs2 = gridspec.GridSpecFromSubplotSpec(2, len(exons), subplot_spec=sgs[1], hspace=0.3, width_ratios=widths) # 1, len
+    gs2 = gridspec.GridSpecFromSubplotSpec(2, len(exons), subplot_spec=sgs[1], hspace=0.0, width_ratios=widths) # 1, len space 0.3
     gs3 = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=sgs[2])
 
     doms=[]
     fams=set()
     colorlist = ["tomato", "dodgerblue", "darkorchid", "mediumvioletred", "coral", "black", "skyblue", "sienna", "gold"]
     colors={}; ct=0
-    from matplotlib.ticker import FormatStrFormatter
     for i, exon in enumerate(exons):
         for j, domain in enumerate(pfams):
             if overlaps(exon[0], exon[1], domain[0], domain[1]):
@@ -110,8 +109,8 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         ax_exon = fig.add_subplot(gs2[0, i])# sharex=ax_cons)
         ax_exon.set_xticks([])
         ax_exon.set_yticks([])
-        #ax_exon.xaxis.set_major_formatter(FormatStrFormatter('%.0e'))
         ax_exon.set_ylim(0,1)
+        ax_exon.set_xlim(exon[0],exon[1])
         ax_exon.axhspan(.6, 1, xmin=0, xmax=1, edgecolor=opts['exon_color'], facecolor = 'none',
             lw=1, zorder=10) # zorder makes sure it's always on top
         
@@ -122,11 +121,14 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         
         xs, ys = [], [] # line width controls height of heatmap
 
-        ax_cons = fig.add_subplot(gs[0, i]) #,sharex=ax_exon)
+        ax_cons = fig.add_subplot(gs[0, i])
         #ax_cons.set_yticks([80,90,100])
         ax_cons.set_yticks([0,80,100])
+        for tick in ax_cons.yaxis.get_major_ticks():
+            tick.label.set_fontsize(6) 
         ax_cons.set_xticks([])
-        #ax_cons.set_ylim(80,100) #80 is our low bar for constraint
+        ax_cons.set_xlim(exon[0],exon[1])
+        ax_cons.set_ylim(0,100) #80 is our low bar for constraint
         if len(pop) > 0:
             afs=[x[1] for x in pop]
             alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
@@ -134,12 +136,6 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             for index, v in enumerate(pop):
                 color = 'blue'; alpha=0.1; lw=1
                 ax_cons.axvline(x=v[0], ymin=0, ymax=100, lw=lw, color=color, alpha=alpha) #alpha=alphas[index])
-                #markers, stemlines, baseline = axd.stem([v[0]], [100], linefmt='-', markerfmt=' ', lw=0.05, color='g', alpha=alphas[index])
-                #plt.setp(baseline, 'linewidth', 0)
-                #plt.setp(stemlines, 'color', opts['pop_variant_color'], 'zorder', -1) # may have to plot each stem in a loop to change alphas
-                #plt.setp(markers, 'color', opts['pop_variant_color'], 'zorder', 1,
-                #        'markeredgecolor', '#666666', 'mew', 1,
-                #        'markersize', 4)
 
         for s, e, height in ctr:
             #if height < 80: continue #only show constraint above our cutoff
@@ -149,26 +145,12 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             ax_cons.set_ylabel('Constraint')
         else:
             plt.setp(ax_cons.get_yticklabels(), visible=False)
-            #plt.setp(ax_patho.get_yticklabels(), visible=False)
             ax_cons.set_yticks([])
             ax_cons.set_xticks([])
-        # ax_patho.set_yticks([])
-        # ax_patho.set_xticks([])
-
-        
-        # ax_patho = fig.add_subplot(gs[1, i], sharex=ax_cons)
 
         if len(vs) > 0:
-            #markers, stemlines, baseline = ax_patho.stem([v[0] for v in vs], -np.log10([v[1] for v in vs]), linefmt='-', markerfmt=' ', lw=0.01)
             for index, v in enumerate(vs):
                 ax_exon.axvline(x=v[0], ymin=.62, ymax=1, color='k', lw=1, alpha=1, zorder=8)
-            #plt.setp(baseline, 'linewidth', 0)
-            #plt.setp(stemlines, 'color', 'black', 'zorder', 0, 'alpha', 0.7)
-
-            #plt.setp(markers, 'color', opts['patho_variant_color'], 'zorder', 2,
-            #        'alpha', 0.7, 'markeredgecolor', '#666666', 'mew', 1,
-            #        'markersize', 4)
-            #ax_patho.set_ylim(0,max(-np.log10([v[1] for v in vs]))+.5)
 
         for s, e, fam in doms:
             if not overlaps(s,e,exon[0],exon[1]):continue
@@ -182,25 +164,6 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             ax_exon.axhspan(.6, 1, xmin=xmin, xmax=xmax, edgecolor=opts['exon_color'], facecolor = colors[fam],
                 lw=1, zorder=9, alpha=0.5) # zorder makes sure it's always on top
         #print colors.keys()
-        #ax_leg.table(cellText=colors.keys(),cellColours=colors.values())
-
-        #if not density:
-        #    continue
-        #idensity = np.zeros(exon[1] - exon[0])
-        #for d in density:
-        #    if d >= exon[0] and d < exon[1]:
-        #        idensity[d-exon[0]]+=1
-        #for j, d in enumerate(idensity):
-        #    if i+1%opts['density_window'] == 0:
-        #        idensity[i-opts['density_window']:i] = 0
-        #idensity = np.convolve(idensity, np.ones(opts['density_window']) / float(opts['density_window']), mode='same')
-        #axd = fig.add_subplot(gs[0, i], sharex=ax) #1,i
-        #axd.plot(np.arange(exon[0], exon[1]), idensity)
-        #if i == 0:
-        #    axd.set_ylabel('Variant density')
-        #axd.set_yticks([])
-        #axd.set_xticks([])
-        
         ax_coverage = fig.add_subplot(gs2[1, i], sharex=ax_exon)
         ax_coverage.plot([c[0] for c in cov], [c[1] for c in cov], color='g')
         ax_coverage.set_yticks([])
@@ -217,9 +180,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     ax_leg.set_yticks([])
     ax_leg.set_xticks([])
     sns.despine(left=True, bottom=True)
-    #gs.tight_layout(fig, h_pad=0)
     #plt.tight_layout()
-    #return fig, gs
     plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/' + filename + '.pdf', bbox_inches='tight')
 
 
