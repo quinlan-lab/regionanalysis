@@ -89,9 +89,9 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     fig = plt.figure(figsize=(20, 2))
     #height_ratios = (1, 1)
     sgs = gridspec.GridSpec(3, 1, height_ratios=[0.5, 1, 1], hspace=0.0)
-    gs = gridspec.GridSpecFromSubplotSpec(1, len(exons), width_ratios=widths, subplot_spec=sgs[0]) # 2, len
+    gs = gridspec.GridSpecFromSubplotSpec(1, len(exons),subplot_spec=sgs[0], width_ratios=widths) # 2, len
             #height_ratios=height_ratios, hspace=0.0)
-    gs2 = gridspec.GridSpecFromSubplotSpec(2, len(exons), width_ratios=widths, subplot_spec=sgs[1], hspace=0.3) # 1, len
+    gs2 = gridspec.GridSpecFromSubplotSpec(2, len(exons), subplot_spec=sgs[1], hspace=0.3, width_ratios=widths) # 1, len
     gs3 = gridspec.GridSpecFromSubplotSpec(1, 1, subplot_spec=sgs[2])
 
     doms=[]
@@ -110,12 +110,9 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         ax_exon = fig.add_subplot(gs2[0, i])# sharex=ax_cons)
         ax_exon.set_xticks([])
         ax_exon.set_yticks([])
-        ax_exon.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+        #ax_exon.xaxis.set_major_formatter(FormatStrFormatter('%.0e'))
         ax_exon.set_ylim(0,1)
-        ax_exon.set_xlim(exon[0],exon[1])
-        #if i == 0:
-        #    ax_exon.set_ylabel('Exons')
-        ax_exon.axhspan(.6, 1, xmin=0.001, xmax=0.999, edgecolor=opts['exon_color'], facecolor = 'none',
+        ax_exon.axhspan(.6, 1, xmin=0, xmax=1, edgecolor=opts['exon_color'], facecolor = 'none',
             lw=1, zorder=10) # zorder makes sure it's always on top
         
         vs = [v for v in patho_variants if exon[0] <= v[0] <= exon[1]]
@@ -125,17 +122,17 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         
         xs, ys = [], [] # line width controls height of heatmap
 
-        ax_cons = fig.add_subplot(gs[0, i],sharex=ax_exon)
-        ax_cons.set_yticks([80,90,100])
-        ax_cons.set_ylim(80,100) #80 is our low bar for constraint
+        ax_cons = fig.add_subplot(gs[0, i]) #,sharex=ax_exon)
+        #ax_cons.set_yticks([80,90,100])
+        ax_cons.set_yticks([0,80,100])
+        ax_cons.set_xticks([])
+        #ax_cons.set_ylim(80,100) #80 is our low bar for constraint
         if len(pop) > 0:
             afs=[x[1] for x in pop]
             alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
             alphas=[1 if k > 1 else k for k in alphas]
             for index, v in enumerate(pop):
                 color = 'blue'; alpha=0.1; lw=1
-                if v[0] == 62062708:
-                    color='red'; alpha=1; lw=3; print exon[0], exon[1]
                 ax_cons.axvline(x=v[0], ymin=0, ymax=100, lw=lw, color=color, alpha=alpha) #alpha=alphas[index])
                 #markers, stemlines, baseline = axd.stem([v[0]], [100], linefmt='-', markerfmt=' ', lw=0.05, color='g', alpha=alphas[index])
                 #plt.setp(baseline, 'linewidth', 0)
@@ -145,7 +142,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                 #        'markersize', 4)
 
         for s, e, height in ctr:
-            if height < 80: continue #only show constraint above our cutoff
+            #if height < 80: continue #only show constraint above our cutoff
             color = ('k' if height >= 80 else 'b')
             ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
@@ -154,6 +151,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             plt.setp(ax_cons.get_yticklabels(), visible=False)
             #plt.setp(ax_patho.get_yticklabels(), visible=False)
             ax_cons.set_yticks([])
+            ax_cons.set_xticks([])
         # ax_patho.set_yticks([])
         # ax_patho.set_xticks([])
 
@@ -203,9 +201,10 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         #axd.set_yticks([])
         #axd.set_xticks([])
         
-        ax_coverage = fig.add_subplot(gs2[1, i], sharex=ax_cons)
+        ax_coverage = fig.add_subplot(gs2[1, i], sharex=ax_exon)
         ax_coverage.plot([c[0] for c in cov], [c[1] for c in cov], color='g')
         ax_coverage.set_yticks([])
+        ax_coverage.set_xticks([])
         ax_coverage.set_ylim(0,1)
     
         for s, e in repeats:
@@ -265,7 +264,7 @@ def get_exons(gff, transcript, region):
         details = r[8]
 
         if transcript not in details: continue
-        if t != 'CDS': continue
+        if t not in ['CDS']: continue #can add "stop_codon" but would be a tiny looking exon basically
         exons.append([s, e])
     return exons
 
