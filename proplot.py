@@ -122,13 +122,13 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         xs, ys = [], [] # line width controls height of heatmap
 
         ax_cons = fig.add_subplot(gs[0, i])
-        #ax_cons.set_yticks([80,90,100])
-        ax_cons.set_yticks([0,80,100])
+        ax_cons.set_yticks([80,90,100])
+        #ax_cons.set_yticks([0,80,100])
         for tick in ax_cons.yaxis.get_major_ticks():
-            tick.label.set_fontsize(6) 
+            tick.label.set_fontsize(8) 
         ax_cons.set_xticks([])
         ax_cons.set_xlim(exon[0],exon[1])
-        ax_cons.set_ylim(0,100) #80 is our low bar for constraint
+        ax_cons.set_ylim(80,101) #80 is our low bar for constraint. 0 for all
         if len(pop) > 0:
             afs=[x[1] for x in pop]
             alphas=map(lambda x: 1.3--np.log10(x)/max(-np.log10([k for k in afs])), afs)
@@ -150,7 +150,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
 
         if len(vs) > 0:
             for index, v in enumerate(vs):
-                ax_exon.axvline(x=v[0], ymin=.62, ymax=1, color='k', lw=1, alpha=1, zorder=8)
+                ax_exon.axvline(x=v[0], ymin=.62, ymax=1, color='k', lw=1, alpha=1, zorder=11)
 
         for s, e, fam in doms:
             if not overlaps(s,e,exon[0],exon[1]):continue
