@@ -1,3 +1,4 @@
+#mysql --user=genome --host=genome-mysql.soe.ucsc.edu -D hg19 -A -e  'SELECT chrom,chromStart,chromEnd,name from ucscGenePfam;' | perl -pe 's/^chr//' | bgzip -c > pfam.hg19.bed.gz
 if [ ! -s pfamflat.bed ]; then
     python flattenpfams.py $DATA/pfam.bed > pfamflat.bed # flatten exomes across transcripts
 fi
