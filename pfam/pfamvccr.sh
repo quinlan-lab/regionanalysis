@@ -12,3 +12,4 @@ bedtools intersect -a pfamflat.bed -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb 
 python fameval.py -i pfam-ccr.bed > pfamshist.txt
 python plotpfam.py -p top100doms -s pfamshist.txt -o $HOME/public_html/randomplots/pfam_hists.pdf
 #python plotpfam.py -p pfams.txt -s pfamshist.txt -o pfam_hists.pdf
+python gerppfam.py > gerps.txt

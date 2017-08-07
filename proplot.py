@@ -142,7 +142,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
             color = ('k' if height >= 80 else 'b')
             ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
-            ax_cons.set_ylabel('Constraint')
+            ax_cons.set_ylabel('Constraint', fontsize=9)
         else:
             plt.setp(ax_cons.get_yticklabels(), visible=False)
             ax_cons.set_yticks([])

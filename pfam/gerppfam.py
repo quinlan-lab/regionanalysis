@@ -3,6 +3,7 @@ import numpy as np
 import tabix 
 from operator import itemgetter
 import subprocess as sp
+import cPickle as pickle
 
 def intersect(variants, regions, wo = True, sortedbool=False):
     def killproc(p):
@@ -114,8 +115,16 @@ pfams = read_pfam(pfampath)
 ccrs=score_average(pfampath, ccrpath)
 gerps=score_gerp(pfams, gerp)
     
-for i in ccrs:
-    print i, ccrs[i]
-for i in gerps:
-    print i, gerps[i]
-#for pfam in ccrs:
+#for i in ccrs:
+#    print i, ccrs[i]
+#for i in gerps:
+#    print i, gerps[i]
+cscores, gscores, labels = [], [], []
+for pfam in ccrs:
+    cscores.append(ccrs[pfam])
+    gscores.append(gerps[pfam])
+    labels.append(pfam)
+data=[cscores,gscores,labels]
+output = open('gerp.pkl', 'wb')
+pickle.dump(data,output)
+output.close()
