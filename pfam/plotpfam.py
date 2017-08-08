@@ -44,9 +44,11 @@ for pfam in pfams:
                         tccr[j][1]=(dbins[i]/totlen)
             vals=[i[1] for i in tccr]; binar=[i[0] for i in tccr]
             print vals, binar
-            axarr[ct].plot(binar, vals)
+            width = (binar[1]-binar[0])
+            axarr[ct].bar(binar, vals, width = width, color = 'r', alpha = 0.7)
+            #axarr[ct].plot(binar, vals)
             axarr[ct].set_title(pfam)
-            axarr[ct].set_xlim(10,100)
+            axarr[ct].set_xlim(0,100) #10,100
             ct+=1
     stats.seek(0)
 #[make_axes_visible(i) for i in axarr]
