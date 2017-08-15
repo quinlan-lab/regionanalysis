@@ -47,6 +47,13 @@ python combine.py benign.vcf.gz | bgzip -c -@ 12 > benign.combine.vcf.gz
 # run evaluate to generate plot data
 python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $HOME/public_html/pathoscore/clinvar -s gnomad10x5_ccr -s pp2hdiv -s CADD -s GERP -s MPC -s mpc_regions -s Grantham -s mis_badness -s ccr+cadd -s ccr+polyphen -s ccr+gerp -s ccr+grantham -s ccr+misbadness pathogenic.combine.vcf.gz benign.combine.vcf.gz #-s gnomad5x1_ccr -s gnomad5x9_ccr -s gnomad50x1_ccr -s gnomad50x9_ccr -s gnomad30x5_ccr
 
+# get intersection of pathogenic and ccrs for odds ratio
+bedtools intersect -a pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > patho-ccr.txt
+bedtools intersect -a benign.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > benign-ccr.txt
+
+# create oddsratio plot
+python oddsratio.py patho-ccr.txt benign-ccr.txt clinvar
+
 # generate fig 2 plot
 python fig2plot.py clinvar
 
@@ -66,5 +73,12 @@ python combine.py control.vcf.gz | bgzip -c -@ 12 > control.combine.vcf.gz
 # run evaluate to generate plot data
 python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $HOME/public_html/pathoscore/samocha -s gnomad10x5_ccr -s pp2hdiv -s CADD -s GERP -s MPC -s mpc_regions -s Grantham -s mis_badness -s ccr+cadd -s ccr+polyphen -s ccr+gerp -s ccr+grantham -s ccr+misbadness neurodev.combine.vcf.gz control.combine.vcf.gz #-s gnomad5x1_ccr -s gnomad5x9_ccr -s gnomad50x1_ccr -s gnomad50x9_ccr -s gnomad30x5_ccr
 
+# get intersection of pathogenic and ccrs for odds ratio
+bedtools intersect -a neurodev.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > neurodev-ccr.txt
+bedtools intersect -a control.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > control-ccr.txt
+
+# create oddsratio plot
+python oddsratio.py neurodev-ccr.txt control-ccr.txt samocha
 # generate fig 2 plot
+
 python fig2plot.py samocha 

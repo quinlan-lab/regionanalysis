@@ -138,8 +138,8 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
                 ax_cons.axvline(x=v[0], ymin=0, ymax=100, lw=lw, color=color, alpha=alpha) #alpha=alphas[index])
 
         for s, e, height in ctr:
-            #if height < 80: continue #only show constraint above our cutoff
-            color = ('k' if height >= 80 else 'b')
+            if height < 90: continue #only show constraint above our cutoff
+            color = ('k' if height >= 90 else 'b')
             ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
             ax_cons.set_ylabel('Constraint', fontsize=9)
