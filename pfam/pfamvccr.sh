@@ -1,6 +1,18 @@
 #mysql --user=genome --host=genome-mysql.soe.ucsc.edu -D hg19 -A -e  'SELECT chrom,chromStart,chromEnd,name from ucscGenePfam;' | perl -pe 's/^chr//' | bgzip -c > pfam.hg19.bed.gz
+##############################################################################################
+# make input: "Pfam A domains with chromosomal co-ordinates from UCSC table browser" #pfam.browser.bed
+# Dated: 17April 2013
+# -> Go to UCSC table browser:
+# -> choose; assembly: hg19, genome: Human, region: genome
+# -> Select 'Genes and Gene Prediction Tracks' under group and 'Pfam in UCSC Gene' under track
+# -> select 'BED- browser extensible data' under output format and click 'get output'
+# -> In the resulting page, select 'Exons plus' under 'Create one BED record per:' and 
+# -> click get BED
+##############################################################################################
 if [ ! -s pfam.exonic.bed ]; then
-    python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
+    sed 's/^chr//g' pfam.browser.bed | awk '{split($4,a,"_exon"); print $1, $2, $3, a[1]}' OFS='\t' | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| sort -k4.4 -k1,1 -k2,2n > pfam.exonic.bed
+    sort -k1,1 -k2,2n pfam.exonic.bed | bgzip -c > pfam.exonic.bed.gz; tabix pfam.exonic.bed.gz
+    #python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
 fi
 if [ ! -s Pfam-A.clans.tsv ]; then
     wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.clans.tsv.gz
