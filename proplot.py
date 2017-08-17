@@ -14,6 +14,7 @@ from matplotlib import collections as mc
 from matplotlib.colors import ListedColormap, BoundaryNorm
 sns.set_style('white')
 import doctest
+import random
 
 def rainbow_text(x, y, strings, colors, ax=None, **kw):
     """
@@ -56,15 +57,16 @@ def overlaps(s1, e1, s2, e2):
     """
     return not (e1 <= s2 or s1 >= e2)
 
-def get_pfam(pfam, transcript, region):
+def get_pfam(pfam, transcript, region): # irrelevant to transcript now, flattened defs from ucsc
     tb = tabix.open(pfam)
     pfams = []
     for r in tb.querys(region):
         s = int(r[1])
         e = int(r[2])
-        details = r[9]
-        if transcript not in details: continue
-        fam=details.split(";")[0].split('"')[1]
+        #details = r[9]
+        #if transcript not in details: continue
+        #fam=details.split(";")[0].split('"')[1]
+        fam = r[3]
         pfams.append([s, e, fam])
     return pfams
 
@@ -96,7 +98,10 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
 
     doms=[]
     fams=set()
-    colorlist = ["tomato", "dodgerblue", "darkorchid", "mediumvioletred", "coral", "black", "skyblue", "sienna", "gold"]
+    random.seed(3)
+    r = random.random()
+    colorlist = sns.hls_palette(len(pfams))
+    random.shuffle(colorlist, lambda: r)
     colors={}; ct=0
     for i, exon in enumerate(exons):
         for j, domain in enumerate(pfams):
@@ -155,16 +160,17 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
         for s, e, fam in doms:
             if not overlaps(s,e,exon[0],exon[1]):continue
             if fam not in fams:
-                #colors[fam] = colorlist[ct]
-                colors[fam] = 'lightgrey'
+                colors[fam] = colorlist[ct]
+                #colors[fam] = 'lightgrey'
                 ct+=1
                 fams.add(fam) 
             xmin=(s-exon[0])/float(exon[1]-exon[0])
             xmax=1-(exon[1]-e)/float(exon[1]-exon[0])
             ax_exon.axhspan(.6, 1, xmin=xmin, xmax=xmax, edgecolor=opts['exon_color'], facecolor = colors[fam],
-                lw=1, zorder=9, alpha=0.5) # zorder makes sure it's always on top
+                lw=1, zorder=9) # zorder makes sure it's always on top
         #print colors.keys()
-        ax_coverage = fig.add_subplot(gs2[1, i], sharex=ax_exon)
+        ax_coverage = fig.add_subplot(gs2[1, i])#, sharex=ax_exon)
+        ax_coverage.set_xlim(exon[0],exon[1])
         ax_coverage.plot([c[0] for c in cov], [c[1] for c in cov], color='g')
         ax_coverage.set_yticks([])
         ax_coverage.set_xticks([])
@@ -176,7 +182,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     ax_leg = fig.add_subplot(gs3[0, 0]) # leg = legend
     ax_leg.set_ylim(0,1)
     ax_leg.set_xlim(0,1)
-    rainbow_text(0,1,colors.keys(),colors.values(),ax=ax_leg, weight="semibold")#ax3.text(0.5,0.5,)
+    rainbow_text(0,0,colors.keys(),colors.values(),ax=ax_leg, weight="semibold")#ax3.text(0.5,0.5,)
     ax_leg.set_yticks([])
     ax_leg.set_xticks([])
     sns.despine(left=True, bottom=True)
@@ -192,14 +198,14 @@ def get_control_genome_positions(control_vcf, region, query_transcript):
         effects = [e.split('|') for e in v.INFO.get('CSQ').split(',')]
         if v.FILTER is not None: continue
         for e in effects:
-            curr_transcript = e[6]
+            #curr_transcript = e[6]
             impact = e[1]
             if 'missense_variant' not in impact:
                 continue
             if v.INFO['AC'] < 1: continue
-            if curr_transcript == query_transcript:
-                control_positions.append((v.POS, v.INFO['AF'])) # can do AC
-                densities.append(v.POS)
+            #if curr_transcript == query_transcript:
+            control_positions.append((v.POS, v.INFO['AF'])) # can do AC
+            densities.append(v.POS)
     return control_positions, densities
 
 
@@ -215,17 +221,19 @@ def get_patho_genome_positions(patho_vcf, region):
     return path_positions
 
 
-def get_exons(gff, transcript, region):
+def get_exons(gff, transcript, region): # now uses flattened exome
     tb = tabix.open(gff)
     exons = []
     for r in tb.querys(region):
-        t = r[2]
-        s = int(r[3])
-        e = int(r[4])
-        details = r[8]
+        # t = r[2]
+        # s = int(r[3])
+        # e = int(r[4])
+        # details = r[8]
+        s = int(r[1])
+        e = int(r[2])
 
-        if transcript not in details: continue
-        if t not in ['CDS']: continue #can add "stop_codon" but would be a tiny looking exon basically
+        #if transcript not in details: continue
+        #if t not in ['CDS']: continue #can add "stop_codon" but would be a tiny looking exon basically
         exons.append([s, e])
     return exons
 
