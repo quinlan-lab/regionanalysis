@@ -6,7 +6,7 @@ from collections import defaultdict
 import sys
 import seaborn as sns
 sns.set_style('white')
-from scipy.stats import fisher_exact
+
 
 ##make contingency table for odds ratios like:
 ##|============|============|===============
@@ -129,15 +129,20 @@ ticks, ors, cis = zip(*sorted(zip(ticks,ors,cis)))
 y_r = [[ors[i]-cis[i][0] for i in range(len(cis))],[cis[i][1]-ors[i] for i in range(len(cis))]]
 print cis, y_r
 ax.errorbar([i for i in lefts], ors, yerr=y_r, color='k', capsize=4, fmt="none")
+#bottoms = [height if height<1 else 1 for height in ors] #2
+#ors2 = [1 if height<1 else height for height in ors] #2
 bottoms = [height if height<1 else 1 for height in ors] #2
-ors2 = [1 if height<1 else height for height in ors] #2
-rects=ax.bar(lefts,ors2,width=width,bottom=bottoms,tick_label=ticks)
+ors2 = [1-height if height<1 else height-1 for height in ors] #2
+
+print ors2, bottoms, ticks
+rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks)
 #autolabel(rects, ax)
 ax.axhline(y=1, color='k') # 2
 ax.set_xlabel("CCR Percentile Bins"+'\n'+"Percent of CCRs that score these variants"+'\n'+"(not whole exome, 95-100 is ~4.1% of all CCRs)")
 ax.set_ylabel("Odds Ratio")
 ax.set_title(filename[0].upper()+filename[1:])
-ax.set_yscale("log",basey=10,nonposy="clip") # 2
+if max(ors) > 10:
+    ax.set_yscale("log",basey=10,nonposy="clip") # 2
 lims=ax.get_ylim()
 ax.set_ylim(lims[0]/1.5, lims[1]+.4)
 sns.despine()
