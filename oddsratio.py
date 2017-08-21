@@ -146,4 +146,5 @@ if max(ors) > 10:
 lims=ax.get_ylim()
 ax.set_ylim(lims[0]/1.5, lims[1]+.4)
 sns.despine()
+matplotlib.rcParams['pdf.fonttype'] = 42
 plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/oddsratio'+filename+'.pdf', bbox_inches='tight')
