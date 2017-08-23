@@ -47,7 +47,7 @@ python combine.py benign.vcf.gz | bgzip -c -@ 12 > benign.combine.vcf.gz
 # run evaluate to generate plot data
 python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $HOME/public_html/pathoscore/clinvar -s gnomad10x5_ccr -s pp2hdiv -s CADD -s GERP -s MPC -s mpc_regions -s Grantham -s mis_badness -s ccr+cadd -s ccr+polyphen -s ccr+gerp -s ccr+grantham -s ccr+misbadness pathogenic.combine.vcf.gz benign.combine.vcf.gz #-s gnomad5x1_ccr -s gnomad5x9_ccr -s gnomad50x1_ccr -s gnomad50x9_ccr -s gnomad30x5_ccr
 
-# get intersection of pathogenic and ccrs for odds ratio
+# get intersection of pathogenic benign and ccrs for odds ratio
 bedtools intersect -a pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > patho-ccr.txt
 bedtools intersect -a benign.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > benign-ccr.txt
 
@@ -56,6 +56,23 @@ python oddsratio.py patho-ccr.txt benign-ccr.txt clinvar
 
 # generate fig 2 plot
 python fig2plot.py clinvar
+
+# ad gene files
+python $HOME/software/pathoscore/pathoscore.py annotate pathogenic.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.pathogenic.combine
+python $HOME/software/pathoscore/pathoscore.py annotate benign.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.benign.combine
+
+# get intersection of ad genes pathogenic benign and ccrs for odds ratio
+bedtools intersect -a adgene.pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > patho-adgene-ccr.txt
+bedtools intersect -a adgene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > benign-adgene-ccr.txt
+
+# create ad gene oddsratio plot
+python oddsratio.py patho-adgene-ccr.txt benign-adgene-ccr.txt clinvar-adgene
+
+# table of top bin (>95%) CCRs by number of intersections with pathogenic variants:
+bedtools intersect -a <(zcat exacresiduals/gnomad10x.5-ccrs.bed.gz | awk '$14>=95') -b pathogenic.combine.vcf.gz -wao > all-ccr-95-patho.txt
+bedtools intersect -a <(zcat exacresiduals/gnomad10x.5-ccrs.bed.gz | awk '$14>=99') -b pathogenic.combine.vcf.gz -wao > all-ccr-99-patho.txt
+python pathotable.py all-ccr-95-patho.txt "95"
+python pathotable.py all-ccr-99-patho.txt "99"
 
 ###########################################
 ###### SAMOCHA ############################
