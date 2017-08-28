@@ -29,3 +29,6 @@ python fameval.py -i pfam-ccr.bed > pfamshist.txt
 python plotpfam.py -p top100doms -s pfamshist.txt -c Pfam-A.clans.tsv -o $HOME/public_html/randomplots/pfam_hists.pdf
 #python plotpfam.py -p pfams.txt -s pfamshist.txt -o pfam_hists.pdf
 python gerppfam.py
+python plotgerp.py ccrgerppfam.pkl
+python ccrvgerp.py
+python plotgerp.py ccrgerp.pkl

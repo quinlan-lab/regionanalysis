@@ -125,6 +125,6 @@ for pfam in ccrs:
     gscores.append(gerps[pfam])
     labels.append(pfam)
 data=[cscores,gscores,labels]
-output = open('gerp.pkl', 'wb')
+output = open('ccrgerppfam.pkl', 'wb')
 pickle.dump(data,output)
 output.close()
