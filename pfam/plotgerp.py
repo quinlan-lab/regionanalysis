@@ -7,7 +7,7 @@ import seaborn as sns
 sns.set_style('white')
 from matplotlib.ticker import FuncFormatter
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib import gridspec
+import matplotlib.patches as patches
 import numpy as np
 
 infile = sys.argv[1]
@@ -32,8 +32,15 @@ if infile == "ccrgerppfam.pkl":
     plt.ylabel("GERP")
     plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr_pfam.pdf', bbox_inches='tight')
 if infile == "ccrgerp.pkl":
+    ct=0; total=0
     gerp, ccr = [tup[0] for tup in data], [tup[1] for tup in data]
+    for i, j in zip(gerp, ccr):
+        if i < 1.7 and j > 95:
+            ct+=1
+        total+=1
+    print ct, total
     fig, ax = plt.subplots()
+    ax.add_patch(patches.Rectangle((95, min(gerp)), 5, abs(1.7-min(gerp)), fill=False, edgecolor='red', linewidth=2))
     colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
     cmap_name='mymap'
     cm = LinearSegmentedColormap.from_list(cmap_name, colors)
@@ -47,6 +54,6 @@ if infile == "ccrgerp.pkl":
     cbar.set_label('Number of Regions', rotation=270, labelpad=20)
     plt.tight_layout()
     sns.despine()
-    plt.xlabel("CCR")
+    plt.xlabel("CCR\n"+str(ct)+" out of "+str(total)+" unique regions in red box")
     plt.ylabel("GERP")
     plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr.pdf', bbox_inches='tight')

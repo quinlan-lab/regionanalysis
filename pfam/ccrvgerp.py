@@ -31,7 +31,7 @@ def perchrom(ccr_gerp_chrom):
             lengths.append(overprev)
             scores.append(gerpprev)
             ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            pctile=region[-1]
+            pctile=float(region[-1])
             gerpdict[rangeprev]=(ccrprevscore,pctile)
             lengths=[]; scores=[]
         rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=region[-1]
