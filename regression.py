@@ -20,20 +20,26 @@ it = ts.reader(sys.argv[1]) # exacresiduals/results/2016_12_10/weightedresiduals
 iterable = (i for i in it)
 totcpg,totcov,totresid,totpct = [],[],[],[]
 topcpg,topcov,topresid,toppct=[],[],[],[]
-for gene in iterable:
-    cpg=float(gene['cpg']);
-    cov=float(gene['cov_score']);
-    resid=float(gene['resid']);
-    pct=float(gene['weighted_pct'])
-    totcpg.append(cpg); totcov.append(cov); totresid.append(resid); totpct.append(pct)
-    if pct > 99:
-        topcpg.append(cpg); topcov.append(cov); topresid.append(resid); toppct.append(pct)
-#variables = pickle.load(open("exacresiduals/var.pickle", "rb"))
-#resid=variables['resid']
-#raws=variables['rawresid']
-#cov=variables['cov']
-#cpg=variables['cpg']
-#genes=variables['genes']
+lengths=[]; cpgs=[]; covs=[]; rangeprev = None
+for region in iterable:
+    cpg=float(region['cpg']);
+    cov=float(region['cov_score']);
+    resid=float(region['resid']);
+    pct=float(region['weighted_pct']);
+    ranges=region['ranges']
+    if rangeprev is None:
+        pass # will be dealt with at next pass through loop
+    elif rangeprev != ranges:
+        totcpg.append(cpgprev); totcov.append(covprev); totresid.append(residprev); totpct.append(pctprev)
+        #if pct > 99:
+        #    topcpg.append(cpgprev); topcov.append(covprev); topresid.append(residprev); toppct.append(pctprev)
+    rangeprev = ranges; covprev = cov; cpgprev = cpg; residprev = resid; pctprev = pct
+
+totcpg.append(cpgprev)
+totcov.append(covprev)
+totresid.append(residprev)
+totpct.append(pctprev)
+
 X = {"CpG": [], "intercept": []}
 X['intercept'] = np.ones(len(totcov))
 X['CpG'] = totcpg
@@ -44,7 +50,6 @@ intercept=results.params['intercept']; cpgcoef=results.params['CpG']
 fig = plt.figure()
 gs = gridspec.GridSpec(2, 1, height_ratios=[2, 2])
 ax0 = plt.subplot(gs[0])
-#ax0.plot(totcpg,totcov,'g.')
 ax0.set_ylim(0,max(totcov))
 colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
 cmap_name='mymap'

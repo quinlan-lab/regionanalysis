@@ -1,7 +1,7 @@
 from __future__ import print_function
 from cyvcf2 import VCF, Writer
 import sys
-key = "gnomad10x5_ccr"
+key = "CCR" #gnomad10x5_ccr
 
 vcf = VCF(sys.argv[1])
 vcf.add_info_to_header({'ID': 'ccr+cadd', 'Description': 'combined score',
@@ -32,7 +32,7 @@ for v in vcf:
     grantham = v.INFO.get('Grantham') # 215 is max grantham, 0 is min
     mis_badness = v.INFO.get('mis_badness')
     mcap = v.INFO.get('mcap')
-    revel = v.INFO.get('revel')
+    revel = v.INFO.get('REVEL')
     MPC = v.INFO.get('MPC')
 
     if gerp:
@@ -101,7 +101,7 @@ for v in vcf:
     
     if MPC:
         MPC = MPC * 25 #(scaled from 0 to ~4.3)
-        if (MPC > 50 and MPC < 75) or MPC < 25 or ccr < 95 or ccr is None:
+        if ((MPC > 50 and MPC < 75) or MPC < 25) and (ccr < 95 and ccr != 0) or ccr is None:
             v.INFO['ccr+mpc'] = MPC
         else:
             v.INFO['ccr+mpc'] = ccr

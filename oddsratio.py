@@ -62,10 +62,10 @@ for line in patho:
         if i == len(bins)-1:
             break
         if pct >= bins[i] and pct <= bins[i+1]:
-            presults[str(bins[i])+"-"+str(bins[i+1])][0]+=1.0
-            lens[str(bins[i])+"-"+str(bins[i+1])]+=leng
+            presults[str(bins[i])+" - "+str(bins[i+1])][0]+=1.0
+            lens[str(bins[i])+" - "+str(bins[i+1])]+=leng
         else:
-            presults[str(bins[i])+"-"+str(bins[i+1])][1]+=1.0
+            presults[str(bins[i])+" - "+str(bins[i+1])][1]+=1.0
 
 for line in benign:
     fields=line.strip().split("\t")
@@ -83,10 +83,10 @@ for line in benign:
         if i == len(bins)-1:
             break
         if pct >= bins[i] and pct <= bins[i+1]:
-            bresults[str(bins[i])+"-"+str(bins[i+1])][0]+=1.0
-            lens[str(bins[i])+"-"+str(bins[i+1])]+=leng
+            bresults[str(bins[i])+" - "+str(bins[i+1])][0]+=1.0
+            lens[str(bins[i])+" - "+str(bins[i+1])]+=leng
         else:
-            bresults[str(bins[i])+"-"+str(bins[i+1])][1]+=1.0
+            bresults[str(bins[i])+" - "+str(bins[i+1])][1]+=1.0
         
 keys,ors,props,cis=[],[],[],[]
 for i in presults:
@@ -124,7 +124,7 @@ def autolabel(rects, ax):
 fig, ax = plt.subplots(1)
 width=0.4
 lefts=np.arange(0,.6*len(keys),.6)
-ticks=[key+'\n'+'%.2f' % prop+"%" for key, prop in zip(keys, props)]
+ticks=[key+'\n'+'(%.2f' % prop+"%)" for key, prop in zip(keys, props)]
 ticks, ors, cis = zip(*sorted(zip(ticks,ors,cis)))
 y_r = [[ors[i]-cis[i][0] for i in range(len(cis))],[cis[i][1]-ors[i] for i in range(len(cis))]]
 print cis, y_r
@@ -139,7 +139,7 @@ rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks)
 #autolabel(rects, ax)
 ax.axhline(y=1, color='k') # 2
 ax.set_xlabel("CCR Percentile Bins"+'\n'+"Percent of CCRs that score these variants"+'\n'+"(not whole exome, 95-100 is ~4.1% of all CCRs)")
-ax.set_ylabel("Odds Ratio")
+ax.set_ylabel("Odds Ratio\n(pathogenic versus benign)")
 ax.set_title(filename[0].upper()+filename[1:])
 if max(ors) > 10:
     ax.set_yscale("log",basey=10,nonposy="clip") # 2
