@@ -6,7 +6,7 @@ VCF_PATH=sys.argv[1]
 
 gnomad = VCF(VCF_PATH)
 kcsq = gnomad["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
-print gnomad.raw_header,
+#print gnomad.raw_header,
 #kcsq = "ALLELE|Consequence|Codons|Amino_acids|Gene|SYMBOL|Feature|EXON|PolyPhen|SIFT|Protein_position|BIOTYPE|ALLELE_NUM|cDNA_position".split("|") # later can extract header in unix so it isn't hard coded
 
 def perchrom(vcf_chrom):
@@ -26,8 +26,8 @@ def perchrom(vcf_chrom):
             if csq['Feature'] == '' or csq['EXON'] == '' : continue #or csq['cDNA_position'] == '': continue
             if u.isfunctional(csq): 
                 outs[0]+=1
-                print v,
-                sys.stdout.flush()
+#                print v,
+#                sys.stdout.flush()
                 break
     return outs
 
