@@ -144,7 +144,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
 
         for s, e, height in ctr:
             if height < 90: continue #only show constraint above our cutoff
-            color = ('k' if height >= 90 else 'b')
+            color = ("#c42427" if height >= 90 else 'b')
             ax_cons.plot((s,e), (height,height), color=color)
         if i == 0:
             ax_cons.set_ylabel('Constraint', fontsize=9)
@@ -187,7 +187,7 @@ def geneplot(exons, pfams, patho_variants, population_variants=None, constraint=
     ax_leg.set_xticks([])
     sns.despine(left=True, bottom=True)
     #plt.tight_layout()
-    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/' + filename + '.pdf', bbox_inches='tight')
+    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/' + filename + '.eps', bbox_inches='tight')
 
 
 def get_control_genome_positions(control_vcf, region, query_transcript):

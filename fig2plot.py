@@ -10,8 +10,8 @@ import sys
 filename=sys.argv[1]
 
 scored = pickle.load(open("scoredict.pkl", "rb"))
-patho=np.array(scored["gnomad10x5_ccr"][1])
-benign=np.array(scored["gnomad10x5_ccr"][0])
+patho=np.array(scored["CCR"][1])
+benign=np.array(scored["CCR"][0])
 
 def step_plot(patho, benign, ax, ax2, **kwargs):
     p, p_edges = np.histogram(patho, bins=kwargs.pop('bins', 50), range=[patho.min(), patho.max()], normed=True)

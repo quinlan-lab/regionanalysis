@@ -135,7 +135,7 @@ bottoms = [height if height<1 else 1 for height in ors] #2
 ors2 = [1-height if height<1 else height-1 for height in ors] #2
 
 print ors2, bottoms, ticks
-rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks)
+rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks,color="#d1d3d4")
 #autolabel(rects, ax)
 ax.axhline(y=1, color='k') # 2
 ax.set_xlabel("CCR Percentile Bins"+'\n'+"Percent of CCRs that score these variants"+'\n'+"(not whole exome, 95-100 is ~4.1% of all CCRs)")
@@ -147,4 +147,4 @@ lims=ax.get_ylim()
 ax.set_ylim(lims[0]/1.5, lims[1]+.4)
 sns.despine()
 matplotlib.rcParams['pdf.fonttype'] = 42
-plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/oddsratio'+filename+'.pdf', bbox_inches='tight')
+plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/oddsratio'+filename+'.eps', bbox_inches='tight')
