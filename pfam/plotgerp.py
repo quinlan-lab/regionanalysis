@@ -32,21 +32,27 @@ if infile == "ccrgerppfam.pkl":
     plt.ylabel("GERP")
     plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr_pfam.pdf', bbox_inches='tight')
 if infile == "ccrgerp.pkl":
-    ct=0; total=0
-    gerp, ccr = [tup[0] for tup in data], [tup[1] for tup in data]
-    for i, j in zip(gerp, ccr):
-        if i < 1.7 and j > 95:
-            ct+=1
+    ct=0; highct=0; total=0
+    gerp, ccr, genes, lengths = zip(*data)
+    constgenes=[]
+    for i, j, k in zip(gerp, ccr, genes):
+        if j > 95:
+            highct+=1
+            if i < 1.7: 
+                ct+=1
+                constgenes.append(k)
         total+=1
-    print ct, total
+    print ct, highct, total
+    for gene in constgenes:
+        print gene
     fig, ax = plt.subplots()
     ax.add_patch(patches.Rectangle((95, min(gerp)), 5, abs(1.7-min(gerp)), fill=False, edgecolor='red', linewidth=2))
-    colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+    colors = [(.9, .9, .9), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
     cmap_name='mymap'
     cm = LinearSegmentedColormap.from_list(cmap_name, colors)
     g=ax.hexbin(ccr, gerp, cmap=cm, bins='log', alpha=0.5, mincnt=1)
     def y_format(x,y):
-        return '{:.0f}'.format(round(10**x-1,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
+        return '{:.0f}'.format(1 if round(10**x-1,-1) == 0 else round(10**x-1,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
         #return '{:.0f}'.format(round(10**x-1,-1) if 10**x-1 != 1 else 1) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
         
     counts,edges=np.histogram(g.get_array(),bins=8)
@@ -55,5 +61,5 @@ if infile == "ccrgerp.pkl":
     plt.tight_layout()
     sns.despine()
     plt.xlabel("CCR\n"+str(ct)+" out of "+str(total)+" unique regions in red box")
-    plt.ylabel("GERP")
+    plt.ylabel("Mean GERP++ score")
     plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr.pdf', bbox_inches='tight')
