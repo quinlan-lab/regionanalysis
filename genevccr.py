@@ -58,15 +58,15 @@ ccrs=np.array(ccrs)
 ax.plot(ccrs, m*ccrs + b, 'k-')
 plt.legend(loc='best')
 #plt.ylim(0,20000)
-#g=ax.hexbin(ccrs, lengths, cmap=cm, alpha=0.5, mincnt=1) #, bins='log')
-#colors = [(0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (0, 0, 0)]
-#cmap_name='mymap'
-#cm = LinearSegmentedColormap.from_list(cmap_name, colors)
-#def y_format(x,y):
-#    return '{:.0f}'.format(round(10**x-1,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
-#counts,edges=np.histogram(g.get_array(),bins=8)
-#cbar = fig.colorbar(g, ax=ax, orientation='vertical', extend='both', extendrect=True, drawedges=False, ticks=edges) #, format=FuncFormatter(y_format))
-#cbar.set_label('Number of Genes', rotation=270, labelpad=20)
+# colors = [(0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (0, 0, 0)]
+# cmap_name='mymap'
+# cm = LinearSegmentedColormap.from_list(cmap_name, colors)
+# g=ax.hexbin(ccrs, lengths, cmap=cm, alpha=0.5, mincnt=1) #, bins='log')
+# def y_format(x,y):
+   # return '{:.0f}'.format(round(10**x-1,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
+# counts,edges=np.histogram(g.get_array(),bins=8)
+# cbar = fig.colorbar(g, ax=ax, orientation='vertical', extend='both', extendrect=True, drawedges=False, ticks=edges) #, format=FuncFormatter(y_format))
+# cbar.set_label('Number of Genes', rotation=270, labelpad=20)
 plt.tight_layout()
 sns.despine()
 plt.xlabel('Maximum CCR Percentile for Gene')

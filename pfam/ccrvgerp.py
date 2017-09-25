@@ -7,9 +7,9 @@ def read_gerp(gerp, region):
     chrom = region[0]
     if "chr" not in chrom:
         chrom="chr"+chrom
-    start=int(region[1]); end=int(region[2]); ranges=region[6]
+    start=int(region[1]); end=int(region[2])
     gerps=np.frombuffer(gerp.values(chrom, start, end), dtype='f')
-    return ranges, np.nanmean(gerps), len(gerps)
+    return np.nanmean(gerps), len(gerps)
 
 gerppath='/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
 ccrpath='/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
@@ -21,7 +21,8 @@ def perchrom(ccr_gerp_chrom):
 
     gerpdict={}; lengths=[]; scores=[]; rangeprev = None
     for region in ccr.querys(chrom):
-        ranges, gerpscore, overlap = read_gerp(gerp, region) # _ = pfam, redundant variable
+        ranges=region[6]
+        gerpscore, overlap = read_gerp(gerp, region) # _ = pfam, redundant variable
         if rangeprev is None:
             pass # will be dealt with at next pass through loop
         elif rangeprev == ranges:
@@ -31,14 +32,14 @@ def perchrom(ccr_gerp_chrom):
             lengths.append(overprev)
             scores.append(gerpprev)
             ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths))
+            gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),ranges,chrom)
             lengths=[]; scores=[]
         rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=float(region[-1]); gene = region[3]
 
     lengths.append(overprev)
     scores.append(gerpprev)
     ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-    gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths))
+    gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),ranges,chrom)
     return gerpdict
 
 import multiprocessing as mp
