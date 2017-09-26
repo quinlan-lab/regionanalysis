@@ -17,3 +17,6 @@ CT=$(echo $CT | cut -f 1 -d " ")
 #6748674
 EX=$(awk '{t+=$3-$2} END {print t}' exacresiduals/flatexome.bed)
 bc <<< "scale=4; $CT/$EX"
+
+# median lengths and functional variant distance plot
+python median.py
