@@ -32,14 +32,14 @@ def perchrom(ccr_gerp_chrom):
             lengths.append(overprev)
             scores.append(gerpprev)
             ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),ranges,chrom)
+            gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),rangeprev,chrom)
             lengths=[]; scores=[]
         rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=float(region[-1]); gene = region[3]
 
     lengths.append(overprev)
     scores.append(gerpprev)
     ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-    gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),ranges,chrom)
+    gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),rangeprev,chrom)
     return gerpdict
 
 import multiprocessing as mp
