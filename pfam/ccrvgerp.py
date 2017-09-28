@@ -21,25 +21,25 @@ def perchrom(ccr_gerp_chrom):
 
     gerpdict={}; lengths=[]; scores=[]; rangeprev = None
     for region in ccr.querys(chrom):
-        ranges=region[6]
+        gene=region[3]; ranges=region[6]
         gerpscore, overlap = read_gerp(gerp, region) # _ = pfam, redundant variable
         if rangeprev is None:
             pass # will be dealt with at next pass through loop
-        elif rangeprev == ranges:
+        elif rangeprev+geneprev == ranges+gene:
             lengths.append(overprev)
             scores.append(gerpprev)
-        elif rangeprev != ranges:
+        elif rangeprev+geneprev != ranges+gene:
             lengths.append(overprev)
             scores.append(gerpprev)
             ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),rangeprev,chrom)
+            gerpdict[rangeprev+geneprev]=(ccrprevscore,pctile,geneprev,sum(lengths),rangeprev,chrom)
             lengths=[]; scores=[]
-        rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=float(region[-1]); gene = region[3]
+        rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=float(region[-1]); geneprev = gene
 
     lengths.append(overprev)
     scores.append(gerpprev)
     ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-    gerpdict[rangeprev]=(ccrprevscore,pctile,gene,sum(lengths),rangeprev,chrom)
+    gerpdict[rangeprev+geneprev]=(ccrprevscore,pctile,geneprev,sum(lengths),rangeprev,chrom)
     return gerpdict
 
 import multiprocessing as mp

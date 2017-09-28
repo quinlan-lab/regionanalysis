@@ -38,14 +38,13 @@ if infile == "ccrgerp.pkl":
     constgenes=[]
     ngerps, nccrs = [], []
     for i, j, k, l in zip(gerp, ccr, genes, lengths):
-        if l < 20:
-            continue
+        if l >= 20:
+            ngerps.append(i); nccrs.append(j)
         if j >= 95:
             highct+=1
             if i < 0.7:  # determined by eyeballing on UCSC, cutoff for reliable conservation is 1.7 in GERP++ paper
                 ct+=1
                 constgenes.append(k)
-            ngerps.append(i); nccrs.append(j)
         total+=1
     #gerp=ngerps; ccr=nccrs
     print ct, highct, total

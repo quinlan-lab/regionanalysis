@@ -10,7 +10,7 @@
 # -> click get BED
 ##############################################################################################
 if [ ! -s pfam.exonic.bed ]; then
-    sed 's/^chr//g' pfam.browser.bed | awk '{split($4,a,"_exon"); print $1, $2, $3, a[1]}' OFS='\t' | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| sort -k4.4 -k1,1 -k2,2n > pfam.exonic.bed
+    sed 's/^chr//g' pfam.browser.bed | awk '{split($4,a,"_exon"); print $1, $2, $3, a[1]}' OFS='\t' | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| bedtools intersect -a stdin -b $HOME/analysis/exacresiduals/flatexome.bed -wb | awk '{print $1,$2,$3,$4,$8}' OFS='\t' | sort -k4,4 -k1,1 -k2,2n > pfam.exonic.bed
     sort -k1,1 -k2,2n pfam.exonic.bed | bgzip -c > pfam.exonic.bed.gz; tabix pfam.exonic.bed.gz
     #python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
 fi
@@ -32,3 +32,5 @@ python gerppfam.py
 python plotgerp.py ccrgerppfam.pkl
 python ccrvgerp.py
 python plotgerp.py ccrgerp.pkl
+bedtools intersect -a $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz -b pfam.exonic.bed.gz -v | awk '$14 >= 95' > topnonpfamccrs.bed
+python nodomplot.py topnonpfamccrs.bed pfam.exonic.bed.gz $HOME/analysis/exacresiduals/flatexome.bed $HOME/public_html/randomplots/nodom.pdf > output
