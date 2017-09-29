@@ -19,16 +19,18 @@ pfamlist=sys.argv[2] # pfam.exonic.bed.gz
 flatexome=sys.argv[3] # /uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/flatexome.bed
 plotout=sys.argv[4] # /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/nodom.pdf
 
+offset=defaultdict(int)
+
 # creates gene-key dictionary of genomic starts and length offsets
 with open(flatexome, 'r') as f:
     for line in f:
         fields = line.strip().split("\t")
         s = int(fields[1]); e = int(fields[2]); g = fields[3] # start, end, gene
         if gdict[g]:
-            gdict[g].append((s, gdict[g][-1][1] + offset, e))
+            gdict[g].append((s, gdict[g][-1][1] + offset[g], e))
         else:
             gdict[g].append((s, 0, e))
-        offset = e - s
+        offset[g] = e - s
 
 # custom bisection function for BED files
 def bisect(lst, value, key=None): 
@@ -90,18 +92,12 @@ distance, coords = [], []
 for gene in cdict:
     for ccr in cdict[gene]:
         si = bisect(pdict[gene], ccr[0], key=itemgetter(0))
-        ei = bisect(pdict[gene], ccr[1], key=itemgetter(0))
+        ei = bisect_left(pdict[gene], (ccr[1],))
         if pdict[gene]:
             if si != 0:
                 ds = ccr[0] - pdict[gene][si-1][1]
-                if ds <= 0:
-                    #print pdict[gene]
-                    print pdict[gene][si-1], ccr[0], si, gene, ds
             else:
                 ds = pdict[gene][0][0] - ccr[1]
-                if ds <= 0:
-                    #print pdict[gene]
-                    print 'start =0', pdict[gene][si-1], ccr[1], si, gene, ds
         else:
             ds = ccr[0]
         if ei < len(pdict[gene]):
@@ -109,17 +105,21 @@ for gene in cdict:
         else:
             if pdict[gene]:
                 de = ccr[0] - pdict[gene][-1][1]
+                if de < 0:
+                    print ccr, pdict[gene][-1], len(pdict[gene]), ei
             else:
                 de = gdict[gene][-1][1] + (gdict[gene][-1][2] - gdict[gene][-1][0]) - ccr[1]
         distance.append(ds if ds < de else de)
         coords.append((ccr[2],ccr[3], gene))
 
+# full-size plot
 matplotlib.rcParams.update({'font.size': 10})
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
 mi, ma = min(distance), max(distance)
-#for i, j in zip(distance, coords):
-#    print i, j 
+print "distances, ccrs"
+for i, j in zip(distance, coords):
+    print i, j 
 step=200
 p,p_edges=np.histogram(distance, bins=np.linspace(0, ma, ma/step), range=(0,ma)) #bins=10
 #print p, p_edges
@@ -132,3 +132,26 @@ ax.set_xlabel("Exonic Distance in bp")
 ax.set_title("Non-Pfam-intersecting CCR (>=95%) distance from Pfam domains")
 sns.despine()
 plt.savefig(plotout,bbox_inches='tight')
+
+# zoomed plot
+matplotlib.rcParams.update({'font.size': 10})
+fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
+ax = fig.add_subplot(1,1,1)
+mi, ma = min(distance), 2000
+#print "distances, ccrs"
+for i, j in zip(distance, coords):
+    print i, j
+step=100
+p,p_edges=np.histogram(distance, bins=np.linspace(0, ma, step), range=(0,ma)) #bins=10
+#print p, p_edges
+#width_p = (p_edges[-1]-p_edges[-2])-(p_edges[-1]-p_edges[-2])/5
+width_p = [p_edges[i+1] - p_edges[i] for i in range(0, len(p_edges)-1)]
+ax.bar(p_edges[:-1], p, width = width_p, color = 'orange', label = 'pathogenic', alpha = 0.7)
+ax.set_ylabel("Count")
+ax.set_yscale("log")
+ax.set_xlabel("Exonic Distance in bp")
+ax.set_title("Non-Pfam-intersecting CCR (>=95%) distance from Pfam domains")
+sns.despine()
+outsplit=plotout.rpartition(".")
+outfile="".join(outsplit[0:-2])+'zoomed'+"".join(outsplit[-2:])
+plt.savefig(outfile,bbox_inches='tight')
