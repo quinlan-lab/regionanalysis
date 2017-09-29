@@ -61,13 +61,13 @@ with open(ccrs, 'r') as f:
             se = [i.split("-") for i in rangeprev.split(",")]
             s = int(se[0][0]); e = int(se[-1][-1])
             Es, Ee = exomemap(s, e, geneprev, gdict)
-            cdict[geneprev].append((Es, Ee))
+            cdict[geneprev].append((Es, Ee, s, e))
         rangeprev = r; geneprev = g; lineprev = line
 
 se = [i.split("-") for i in rangeprev.split(",")]
 s = int(se[0][0]); e = int(se[-1][-1])
 Es, Ee = exomemap(s, e, geneprev, gdict)
-cdict[geneprev].append((Es, Ee))
+cdict[geneprev].append((Es, Ee, s, e))
  
 with gzip.open(pfamlist, 'rb') as f:
     for line in f:
@@ -86,7 +86,7 @@ with gzip.open(pfamlist, 'rb') as f:
 #for j in pdict:
 #    print j, pdict[j]
 
-distance=[]
+distance, coords = [], []
 for gene in cdict:
     for ccr in cdict[gene]:
         si = bisect(pdict[gene], ccr[0], key=itemgetter(0))
@@ -101,7 +101,7 @@ for gene in cdict:
                 ds = pdict[gene][0][0] - ccr[1]
                 if ds <= 0:
                     #print pdict[gene]
-                    print pdict[gene][si-1], ccr, si, gene, ds
+                    print 'start =0', pdict[gene][si-1], ccr[1], si, gene, ds
         else:
             ds = ccr[0]
         if ei < len(pdict[gene]):
@@ -112,16 +112,17 @@ for gene in cdict:
             else:
                 de = gdict[gene][-1][1] + (gdict[gene][-1][2] - gdict[gene][-1][0]) - ccr[1]
         distance.append(ds if ds < de else de)
+        coords.append((ccr[2],ccr[3], gene))
 
 matplotlib.rcParams.update({'font.size': 10})
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
 mi, ma = min(distance), max(distance)
-#for i in distance:
-#    print i
+#for i, j in zip(distance, coords):
+#    print i, j 
 step=200
 p,p_edges=np.histogram(distance, bins=np.linspace(0, ma, ma/step), range=(0,ma)) #bins=10
-print p, p_edges
+#print p, p_edges
 #width_p = (p_edges[-1]-p_edges[-2])-(p_edges[-1]-p_edges[-2])/5
 width_p = [p_edges[i+1] - p_edges[i] for i in range(0, len(p_edges)-1)]
 ax.bar(p_edges[:-1], p, width = width_p, color = 'orange', label = 'pathogenic', alpha = 0.7)

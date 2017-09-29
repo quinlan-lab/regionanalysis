@@ -32,5 +32,7 @@ python gerppfam.py
 python plotgerp.py ccrgerppfam.pkl
 python ccrvgerp.py
 python plotgerp.py ccrgerp.pkl
-bedtools intersect -a $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz -b pfam.exonic.bed.gz -v | awk '$14 >= 95' > topnonpfamccrs.bed
+#bedtools intersect -a $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz -b pfam.exonic.bed.gz -v | awk '$14 >= 95' > topnonpfamccrs.bed
+zcat $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz | awk '{n=split($7,a,/,/); split(a[1],s,/-/); m=split(a[n],e,/-/); {printf "%s\t%s\t%s\t", $1, s[1], e[m]} {for (x=4; x<=NF; x++) printf "%s\t", $x} {printf "\n"}}' OFS="\t" | uniq > ccrsingenomespace.bed
+bedtools intersect -a ccrsingenomespace.bed -b pfam.exonic.bed.gz -v | awk '$14 >= 95' > topnonpfamccrs.bed
 python nodomplot.py topnonpfamccrs.bed pfam.exonic.bed.gz $HOME/analysis/exacresiduals/flatexome.bed $HOME/public_html/randomplots/nodom.pdf > output
