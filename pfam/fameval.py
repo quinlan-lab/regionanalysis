@@ -17,7 +17,7 @@ for line in intersect: #sort intersection by family name
     lenh=end-start
     if family==prevfam:
         for i in range(0,len(bins)):
-            if prevccr <= bins[i] and prevccr > bins[i-1]:
+            if prevccr <= bins[i] and prevccr > bins[i-1]: # not putting >= bins[i-1] eliminates 0th percentile CCRs, also bug is bins[0-1] = bins[-1]
                 try:
                     tccr[bins[i]]+=prevlen
                 except KeyError:

@@ -14,6 +14,11 @@ if [ ! -s pfam.exonic.bed ]; then
     sort -k1,1 -k2,2n pfam.exonic.bed | bgzip -c > pfam.exonic.bed.gz; tabix pfam.exonic.bed.gz
     #python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
 fi
+if [ ! -s pfam.genome.gene.bed ]; then
+    sed 's/^chr//g' pfam.genome.bed | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| bedtools intersect -a stdin -b $HOME/analysis/exacresiduals/flatexome.bed -wa -wb | awk '{print $1,$2,$3,$4,$8}' OFS='\t' | sort -k4,4 -k1,1 -k2,2n | uniq > pfam.genome.gene.bed
+    sort -k1,1 -k2,2n pfam.genome.gene.bed | bgzip -c > pfam.genome.gene.bed.gz; tabix pfam.genome.gene.bed.gz
+    #python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
+fi
 if [ ! -s Pfam-A.clans.tsv ]; then
     wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.clans.tsv.gz
     gunzip Pfam-A.clans.tsv.gz
@@ -24,15 +29,39 @@ paste tmp/nodomccrs tmp/domccrs | python ../hist.py -o pfam_dist.pdf -t "gnomad 
 awk '$14>90' ccr-pfam.bed | cut -f 18 | sort | uniq -c | sort -k1,1nr | head -100 | sed '1d' | sed 's/^\s*\S*//g' > top100doms #top 100 domains
 bedtools intersect -b ../exacresiduals/gnomad10x.5-ccrs.bed.gz -a pfam.exonic.bed -u | cut -f 4 | sort | uniq > pfams.txt
 #5117/5416 uniq pfams covered by gnomad-ccrs.bed.gz
+#
+# histograms of ccr dists across pfams #
+#
 bedtools intersect -a pfam.exonic.bed -b ../exacresiduals/gnomad10x.5-ccrs.bed.gz -wb | sort -k4,4 > pfam-ccr.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
 python fameval.py -i pfam-ccr.bed > pfamshist.txt
 python plotpfam.py -p top100doms -s pfamshist.txt -c Pfam-A.clans.tsv -o $HOME/public_html/randomplots/pfam_hists.pdf
 #python plotpfam.py -p pfams.txt -s pfamshist.txt -o pfam_hists.pdf
+#
+# generate gerp v ccr plots
+# 
 python gerppfam.py
 python plotgerp.py ccrgerppfam.pkl
 python ccrvgerp.py
 python plotgerp.py ccrgerp.pkl
-#bedtools intersect -a $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz -b pfam.exonic.bed.gz -v | awk '$14 >= 95' > topnonpfamccrs.bed
+#
+# nodom analysis
+#
 zcat $HOME/analysis/essentials/gnomadbased-ccrs.bed.gz | awk '{n=split($7,a,/,/); split(a[1],s,/-/); m=split(a[n],e,/-/); {printf "%s\t%s\t%s", $1, s[1], e[m]} {for (x=4; x<=NF; x++) printf "\t%s", $x} {printf "\n"}}' OFS="\t" | uniq > ccrsingenomespace.bed
-bedtools intersect -a <(awk '$14 >= 95' ccrsingenomespace.bed) -b pfam.exonic.bed.gz -v > topnonpfamccrs.bed
-python nodomplot.py topnonpfamccrs.bed pfam.exonic.bed.gz $HOME/analysis/exacresiduals/flatexome.bed $HOME/public_html/randomplots/nodom.pdf > output
+bedtools intersect -a <(awk '$NF >= 95' ccrsingenomespace.bed) -b pfam.genome.gene.bed -v > topnonpfamccrs.bed
+bedtools intersect -a <(awk '$NF <= 20 && $NF != 0' ccrsingenomespace.bed) -b pfam.genome.gene.bed -v > bottomnonpfamccrs.bed
+bedtools intersect -a <(awk '$NF >= 95' ccrsingenomespace.bed) -b pfam.genome.gene.bed -u > toppfamccrs.bed
+python nodomplot.py topnonpfamccrs.bed bottomnonpfamccrs.bed pfam.exonic.bed $HOME/analysis/exacresiduals/flatexome.bed $HOME/public_html/randomplots/nodom.pdf > output
+
+# generate table of:
+TOT=$(wc -l toppfamccrs.bed)
+# 1. CCRs that enclose a Pfam domain
+CP=$(bedtools intersect -a toppfamccrs.bed -b pfam.genome.bed -wa -wb | awk '{if ($3 >= $17 && $2 <= $16) print}' OFS="\t" | cut -f 1,2,3 | uniq | wc -l)
+# 2. Pfam domains that enclose a CCR
+PC=$(bedtools intersect -a toppfamccrs.bed -b pfam.genome.bed -wa -wb | awk '{if ($3 <= $17 && $2 >= $16) print}' OFS="\t" | cut -f 1,2,3 | uniq | wc -l)
+# 3. CCRs that partially overlap a Pfam domain
+PO=$(bedtools intersect -a toppfamccrs.bed -b pfam.genome.bed -wa -wb | awk '{if (($3 <= $17 && $2 <= $16) || ($3 >= $17 && $2 >= $16)) print}' OFS="\t" | cut -f 1,2,3 | uniq | wc -l)
+bc <<< "$CP+$PC+$PO"
+echo $TOT
+# 4. CCRs that are near a Pfam domain  (need to define breakpoint)
+# 5. CCRs that are far away from a Pfam domain (need to define breakpoint)
+# from nodomplot.py:
