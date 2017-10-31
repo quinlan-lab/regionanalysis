@@ -51,10 +51,14 @@ results = sm.OLS(dccrs, X.astype(float), hasconst=True).fit()
 intercept=results.params['intercept']; cpgcoef=results.params['CCRs']
 
 matplotlib.rcParams.update({'font.size': 10})
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
 ax.set_ylim(0,max(ccrs))
-colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+#colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+colors = sns.color_palette("GnBu", 10)
 cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax.hexbin(dccrs, ccrs, cmap=cm, bins='log', alpha=0.5, mincnt=1)
@@ -85,7 +89,8 @@ matplotlib.rcParams.update({'font.size': 10})
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
 ax.set_ylim(0,max(maxccrs))
-colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+#colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax.hexbin(maxdccrs, maxccrs, cmap=cm, bins='log', alpha=0.5, mincnt=1)
@@ -167,8 +172,8 @@ fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and p
 ax = fig.add_subplot(1,1,1)
 binar=[i-5 for i in bins]
 width = (bins[1]-bins[0])+.1
-ax.bar(bins, vals, width = width, color = 'b', alpha = 0.7)
-ax.set_xlabel('Doubleton or greater CCR percentile');ax.set_ylabel('FDR (fraction of doubleton CCRs > max full CCR score/count of doubleton CCRs in bin)')
+ax.bar(bins, vals, width = width, color = (161/255.0,218/255.0,215/255.0), alpha = 0.7, edgecolor = (96/255.0, 133/255.0, 131/255.0))
+ax.set_xlabel('Doubleton or greater CCR percentile');ax.set_ylabel('FDR') # FDR = (fraction of doubleton CCRs > max full CCR score/count of doubleton CCRs in bin)
 outsplit=plotout.rpartition(".")
 outfile="".join(outsplit[0:-2])+'bar'+"".join(outsplit[-2:])
 plt.savefig(outfile, bbox_inches='tight')
@@ -185,7 +190,8 @@ intercept=results.params['intercept']; cpgcoef=results.params['CCRs']
 matplotlib.rcParams.update({'font.size': 10})
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
-colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+#colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 cmap_name='mymap'
 maxdccrs=np.array(maxdccrs); maxccrs=np.array(maxccrs)
 ds=maxdccrs[np.where(maxdccrs>=95)]

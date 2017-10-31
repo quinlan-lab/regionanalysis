@@ -16,6 +16,10 @@ sns.set_style('white')
 import doctest
 import random
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
 def rainbow_text(x, y, strings, colors, ax=None, **kw):
     """
     Take a list of ``strings`` and ``colors`` and place them next to each

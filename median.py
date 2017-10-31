@@ -28,6 +28,10 @@ for i, d in enumerate(ts.reader('exacresiduals/results/unfiltered/exac-regions-n
     length=sum([float(i.split("-")[1]) - float(i.split("-")[0]) for i in d['ranges'].split(",")])
     lengths.append(length)
 
+matplotlib.rcParams.update({'font.size': 10})
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 fig, ax = plt.subplots()
 step=100
 ma = max(lengths)

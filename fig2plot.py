@@ -7,6 +7,10 @@ import seaborn as sns
 sns.set_style("white")
 import sys
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
 filename=sys.argv[1]
 
 scored = pickle.load(open("scoredict.pkl", "rb"))

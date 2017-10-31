@@ -11,6 +11,10 @@ import matplotlib.patches as patches
 import numpy as np
 from scipy.stats import pearsonr
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
 infile = sys.argv[1]
 pk = open(infile, 'rb')
 data = pickle.load(pk)
@@ -53,7 +57,9 @@ if infile == "ccrgerp.pkl":
         genefile.write(gene+"\n")
     fig, ax = plt.subplots()
     ax.add_patch(patches.Rectangle((95, min(gerp)), 5, abs(0.7-min(gerp)), fill=False, edgecolor='red', linewidth=2))
-    colors = [(.9, .9, .9), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+    #colors = [(.9, .9, .9), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+    colors = sns.color_palette("GnBu", 10)
+
     cmap_name='mymap'
     cm = LinearSegmentedColormap.from_list(cmap_name, colors)
     g=ax.hexbin(ccr, gerp, cmap=cm, bins='log', alpha=0.5, mincnt=1)

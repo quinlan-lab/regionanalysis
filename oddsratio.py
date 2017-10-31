@@ -121,6 +121,9 @@ def autolabel(rects, ax):
                 ha='center', va='bottom')
 
 #fig, axarr = plt.subplots(2, sharex=True)
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 fig, ax = plt.subplots(1)
 width=0.4
 lefts=np.arange(0,.6*len(keys),.6)

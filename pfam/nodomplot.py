@@ -180,6 +180,9 @@ for gene in pdict:
                 domdistances.append(dist)
 # full-size plot
 matplotlib.rcParams.update({'font.size': 10})
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 fig = plt.figure(figsize=(10,10)) # adjust figsize to change shape of plot and proportions
 ax = fig.add_subplot(1,1,1)
 mi, ma = min(distance), max(distance)
