@@ -5,6 +5,7 @@ bash runproplot.sh # contains proplot.py
 # making Figures 2/5
 
 bash runpathoscore.sh # contains ~/software/pathoscore/pathoscore.py (modified to spit out a pickle dump), fig2plot.py, oddsratio.py, combine.py
+Rscript genes_with_ccrs_above_pct.R
 
 # making Figure 3 (aaron has code for Figure 4)
 
@@ -29,7 +30,7 @@ python median.py /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplot
 
 cd exacresiduals
 python exac-regions.py -n -w -c "data/exacv2.chr{chrom}.cov.txt.gz" -e data/Homo_sapiens.GRCh37.75.gtf.gz -x data/gnomad-vep-vt.vcf.gz -d 10 -l 0.5 -s data/self-chains.gt90.bed.gz data/segmental.bed.gz -f data/hg19.fa > results/nosingletons10x.5/exac-regions-nosingletons-novariant.txt
-python singletons.py -c "data/exacv2.chr{chrom}.cov.txt.gz" -e data/Homo_sapiens.GRCh37.75.gtf.gz -x data/gnomad-vep-vt.vcf.gz -d 10 -l 0.5 -s data/self-chains.gt90.bed.gz data/segmental.bed.gz -f data/hg19.fa > gnomadsingletons.vcf
+python singletons.py -c "data/exacv2.chr{chrom}.cov.txt.gz" -e data/Homo_sapiens.GRCh37.75.gtf.gz -x data/gnomad-vep-vt.vcf.gz -d 10 -l 0.5 -s data/self-chains.gt90.bed.gz data/segmental.bed.gz -f data/hg19.fa | grep -Pv '^X|^Y' > gnomadsingletons.vcf
 cd -
 bash python fdr.sh # contains fdr.py
 
