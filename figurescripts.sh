@@ -32,14 +32,24 @@ cd exacresiduals
 python exac-regions.py -n -w -c "data/exacv2.chr{chrom}.cov.txt.gz" -e data/Homo_sapiens.GRCh37.75.gtf.gz -x data/gnomad-vep-vt.vcf.gz -d 10 -l 0.5 -s data/self-chains.gt90.bed.gz data/segmental.bed.gz -f data/hg19.fa > results/nosingletons10x.5/exac-regions-nosingletons-novariant.txt
 python singletons.py -c "data/exacv2.chr{chrom}.cov.txt.gz" -e data/Homo_sapiens.GRCh37.75.gtf.gz -x data/gnomad-vep-vt.vcf.gz -d 10 -l 0.5 -s data/self-chains.gt90.bed.gz data/segmental.bed.gz -f data/hg19.fa | grep -Pv '^X|^Y' > gnomadsingletons.vcf
 cd -
+
+SI=$(grep -v "^#" exacresiduals/gnomadsingletons.vcf | wc -l)
+TOT=$(zgrep "VARTRUE" essentials/gnomadbased-ccrs.bed.gz | wc -l)
+echo "% of singletons in gnomAD\n"
+bc <<< "scale=4; $SI/$TOT" 
+
 bash python fdr.sh # contains fdr.py
 
 # code for determining how many genes have no clinvar variation but have high CCRs
 # used ClinVar variants designated as functional and not overlapping ExAC
+# can't use combine as is, need to extract functional variants and exclude exac
 
-sort -k4,4 -k2,2n exacresiduals/flatexome.bed | python genomeexome.py | grep -v 'hsa-mir' | sort -k1,1 -k2,2n > genomebasedexome.bed
-
-# TODO: can't use combine as is, need to extract functional variants and exclude exac
 python vars.py -w pathogenic.combine.vcf.gz -f > funcpathos.vcf
-bedtools intersect -a genomebasedexome.bed -b <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95') -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4 | sort | uniq > 95ccrgenesnopatho
-bedtools intersect -a genomebasedexome.bed -b <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99') -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4 | sort | uniq > 99ccrgenesnopatho
+CP=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95' | bedtools intersect -a stdin -b funcpathos.vcf | cut -f 4 | sort | uniq | wc -l)
+CT=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95' | cut -f 4 | sort | uniq | wc -l)
+echo "Fraction of genes with CCR >= 95 w/ no known function in ClinVar\n"
+bc <<< "scale=4; ($CT-$CP)/$CT"
+CP=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf | cut -f 4 | sort | uniq | wc -l)
+CT=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | cut -f 4 | sort | uniq | wc -l)
+echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar\n"
+bc <<< "scale=4; ($CT-$CP)/$CT"
