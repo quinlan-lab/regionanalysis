@@ -1,6 +1,6 @@
 HOME=/uufs/chpc.utah.edu/common/home/u1021864
 DATA=/scratch/ucgd/lustre/u1021864/serial
-# table from: https://www.nature.com/gim/journal/vaop/ncurrent/fig_tab/gim201731t2.html
+# table from: https://www.nature.com/gim/journal/vaop/ncurrent/fig_tab/gim201731t2.html (https://www.nature.com/articles/gim201731.pdf)
 # fasta combined from: ftp://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/
 # idea from: https://www.biostars.org/p/15992/
 if [ ! -s $DATA/hg19.fasta.dict ]; then

@@ -5,8 +5,12 @@ bedtools intersect -a tmp/doubletonccrsingenomespace.bed -b tmp/ccrsingenomespac
 #bedtools intersect -a <(sed '1d' exacresiduals/results/gnomAD10x.5/weightedresiduals-cpg-novariant.txt) -b <(sed '1d' exacresiduals/results/nosingletons10x.5/weightedresiduals-cpg-nosingletons-novariant.txt) -wa -wb > ccrintersect.txt
 python saturation.py ccrintersect.txt $HOME/public_html/randomplots/saturation.pdf > out
 
-#FDR calc
+# FDR calc
+# comes from samocha set
+bedtools intersect -a control.combine.vcf.gz -b essentials/gnomadbased-ccrs.bed.gz -wa -wb -sorted | awk '{print $NF}' > controlscores
+bedtools intersect -a neurodev.combine.vcf.gz -b essentials/gnomadbased-ccrs.bed.gz -wa -wb -sorted | awk '{print $NF}' > neurodevscores
+python fdr.py controlscores neurodevscores $HOME/public_html/randomplots/fdr.pdf
 
-python
-
-
+bedtools intersect -a <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=90') -b control.combine.vcf.gz -wa -wb -sorted | > benignbreaks.txt
+vcfanno relative.conf control.combine.vcf.gz | bgzip -c > control.combine.ranges.vcf.gz
+python relative.py control.combine.ranges.vcf.gz $HOME/public_html/randomplots/relative.pdf
