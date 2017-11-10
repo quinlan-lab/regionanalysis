@@ -62,15 +62,16 @@ width=0.4
 lefts=np.arange(0,.6*len(keys),.6)
 keys, values = zip(*sorted(zip(keys,values)))
 
-rects=ax.bar(left=lefts,height=values,width=width,tick_label=keys)
+rects=ax.bar(left=lefts,height=values,width=width,tick_label=keys,color="#A1DAD7")
 autolabel(rects, ax)
-ax.set_xlabel("Number of times CCR intersected with a pathogenic variant")
+ax.set_xlabel("Number of ClinVar pathogenic variants in " + ccrpct + "th percentile CCR")
 ax.set_ylabel("Frequency")
-ax.set_title("Unique CCRs > "+ccrpct+"% intersected with pathogenic variants from ClinVar")
 lims=ax.get_ylim()
 #ax.set_ylim(lims[0]/1.5, lims[1]+.4)
 ax.set_yscale("log",basey=10,nonposy="clip")
-sns.despine()
+sns.despine(bottom=True)
 plt.tight_layout()
 matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
 plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/pathogenicsinccrs-'+ccrpct+'.pdf', bbox_inches='tight')

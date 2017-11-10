@@ -51,9 +51,6 @@ python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $H
 bedtools intersect -a pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > patho-ccr.txt
 bedtools intersect -a benign.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > benign-ccr.txt
 
-# create oddsratio plot
-python oddsratio.py patho-ccr.txt benign-ccr.txt clinvar
-
 # generate fig 2 plot
 python fig2plot.py clinvar
 
@@ -65,8 +62,8 @@ python $HOME/software/pathoscore/pathoscore.py annotate benign.combine.vcf.gz --
 bedtools intersect -a adgene.pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > patho-adgene-ccr.txt
 bedtools intersect -a adgene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > benign-adgene-ccr.txt
 
-# create ad gene oddsratio plot
-python oddsratio.py patho-adgene-ccr.txt benign-adgene-ccr.txt clinvar-adgene
+# create oddsratio plot
+python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-adgene-ccr.txt benign-adgene-ccr.txt -o clinvar
 
 # table of top bin (>95%) CCRs by number of intersections with pathogenic variants:
 bedtools intersect -a <(zcat exacresiduals/gnomad10x.5-ccrs.bed.gz | awk '$14>=95') -b pathogenic.combine.vcf.gz -wao > all-ccr-95-patho.txt
@@ -95,7 +92,7 @@ bedtools intersect -a neurodev.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.
 bedtools intersect -a control.combine.vcf.gz -b exacresiduals/gnomad10x.5-ccrs.bed.gz -wb > control-ccr.txt
 
 # create oddsratio plot
-python oddsratio.py neurodev-ccr.txt control-ccr.txt samocha
+python oddsratio.py -f neurodev-ccr.txt control-ccr.txt -o samocha
 # generate fig 2 plot
 
 python fig2plot.py samocha 

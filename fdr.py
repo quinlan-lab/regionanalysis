@@ -42,7 +42,7 @@ ax = fig.add_subplot(1,1,1)
 width=1
 rects1 = ax.bar(cutoffs, fpr, width, color = (161/255.0,218/255.0,215/255.0), edgecolor = (96/255.0, 133/255.0, 131/255.0), label = "FPR")
 rects2 = ax.bar(cutoffs+width, fdr, width, color = (56/255.0,138/255.0,172/255.0), edgecolor = (96/255.0, 133/255.0, 131/255.0), label = "FDR")
-ax.set_xticks(cutoffs+width/2)
+ax.set_xticks(cutoffs+width*.5)
 ax.set_xticklabels(map(str,cutoffs))
 ax.legend()
 ax.set_xlabel('CCR Percentile Cutoff') # FDR = (benigns/benigns+pathogenics in bin)
