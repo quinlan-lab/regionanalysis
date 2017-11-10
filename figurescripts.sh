@@ -52,4 +52,7 @@ bc <<< "scale=4; ($CT-$CP)/$CT"
 CP=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf | cut -f 4 | sort | uniq | wc -l)
 CT=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | cut -f 4 | sort | uniq | wc -l)
 echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar\n"
-bc <<< "scale=4; ($CT-$CP)/$CT"
+bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
+
+# pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
+zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched.tsv
