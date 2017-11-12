@@ -1,3 +1,6 @@
+HOME=/uufs/chpc.utah.edu/common/home/u1021864
+DATA=/scratch/ucgd/lustre/u1021864/serial
+
 # making Figure 1
 
 bash runproplot.sh # contains proplot.py
@@ -5,11 +8,15 @@ bash runproplot.sh # contains proplot.py
 # making Figures 2/5
 
 bash runpathoscore.sh # contains ~/software/pathoscore/pathoscore.py (modified to spit out a pickle dump), fig2plot.py, oddsratio.py, combine.py
-Rscript genes_with_ccrs_above_pct.R
+Rscript genes_with_ccrs_above_pct.R essentials/gnomadbased-ccrs.bed.gz $HOME/public_html/randomplots/genes_with_ccrs_above_pct.pdf
 
-# making Figure 3 (aaron has code for Figure 4)
+# making Figure 3
 
 bash pfam/pfamvccr.sh # contains pfam/pfamhist.py, pfam/gerppfam.py, pfam/fameval.py
+
+# making Figure 4
+(printf "chr\tstart\tend\tgene\tccr\tmpcreg\n"; bedtools intersect -a essentials/gnomadbased-ccrs.bed.gz -b essentials/mpc.regions.clean.sorted.bed.gz -wao -sorted | cut -f 1,2,3,4,14,19) | bgzip > ccr.v.mpcregions.bed.gz
+Rscript ccr99_versus_missensedepletion.R ccr.v.mpcregions.bed.gz $HOME/public_html/randomplots/ccr99_v_mpc.pdf supp_table_2.tsv
 
 # missense variant calculation
 
@@ -24,10 +31,10 @@ EX=$(awk '{t+=$3-$2} END {print t}' exacresiduals/flatexome.bed)
 bc <<< "scale=4; $CT/$EX"
 
 # median lengths and functional variant distance plot
-python median.py essentials/gnomadbased-ccrs.bed.gz exacresiduals/results/unfiltered/exac-regions-novariant.txt /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/distances.pdf
+python median.py essentials/gnomadbased-ccrs.bed.gz exacresiduals/results/unfiltered/exac-regions-novariant.txt $HOME/public_html/randomplots/distances.pdf
 
 # gene size vs percentile 
-python genevccr.py exacresiduals/flatexome.bed essentials/gnomadbased-ccrs.bed.gz /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/genevccr.pdf
+python genevccr.py exacresiduals/flatexome.bed essentials/gnomadbased-ccrs.bed.gz $HOME/public_html/randomplots/genevccr.pdf
 
 # singletons and non-singleton model to estimate saturation, and FDR (Figure 6)
 
