@@ -24,7 +24,10 @@ EX=$(awk '{t+=$3-$2} END {print t}' exacresiduals/flatexome.bed)
 bc <<< "scale=4; $CT/$EX"
 
 # median lengths and functional variant distance plot
-python median.py /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/distances.pdf
+python median.py essentials/gnomadbased-ccrs.bed.gz exacresiduals/results/unfiltered/exac-regions-novariant.txt /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/distances.pdf
+
+# gene size vs percentile 
+python genevccr.py exacresiduals/flatexome.bed essentials/gnomadbased-ccrs.bed.gz /uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/genevccr.pdf
 
 # singletons and non-singleton model to estimate saturation, and FDR (Figure 6)
 
@@ -56,3 +59,4 @@ bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because 
 
 # pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
 zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched.tsv
+
