@@ -34,8 +34,7 @@ cut -f 4 pfam.genome.gene.bed | sort | uniq -c | sed 's/^\s*//g' > pfamcounts.tx
 #
 bedtools intersect -a pfam.genome.gene.bed -b ../exacresiduals/gnomad10x.5-ccrs.bed.gz -wb | sort -k4,4 > pfam-ccr.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
 python fameval.py -i pfam-ccr.bed > pfamshist.txt
-python plotpfam.py -p top100doms -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcounts.txt -o $HOME/public_html/randomplots/pfam_hists.pdf
-#python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcounts.txt -o $HOME/public_html/randomplots/pfam_hists.pdf
+python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcounts.txt -o $HOME/public_html/randomplots/pfam_hists\(supp_doc_1\).pdf
 #
 # generate gerp v ccr plots
 # 
