@@ -16,7 +16,7 @@ bash pfam/pfamvccr.sh # contains pfam/pfamhist.py, pfam/gerppfam.py, pfam/fameva
 
 # making Figure 4
 (printf "chr\tstart\tend\tgene\tccr\tmpcreg\n"; bedtools intersect -a essentials/gnomadbased-ccrs.bed.gz -b essentials/mpc.regions.clean.sorted.bed.gz -wao -sorted | cut -f 1,2,3,4,14,19) | bgzip > ccr.v.mpcregions.bed.gz
-Rscript ccr99_versus_missensedepletion.R ccr.v.mpcregions.bed.gz $HOME/public_html/randomplots/ccr99_v_mpc.pdf supp_table_2.tsv
+Rscript ccr99_versus_missensedepletion.R ccr.v.mpcregions.bed.gz $HOME/public_html/randomplots/ccr99_v_mpc.pdf ccr99vmpc\(supp_table_4\).tsv
 
 # missense variant calculation
 
@@ -29,6 +29,9 @@ cd -
 CT=$(grep VARTRUE exacresiduals/results/unfiltered/exac-regions-novariant.txt | wc -l)
 EX=$(awk '{t+=$3-$2} END {print t}' exacresiduals/flatexome.bed)
 bc <<< "scale=4; $CT/$EX"
+
+# genes with 99th percentile CCR and how many (Supp Table 1)
+Rscript genesw99CCR.R essentials/gnomadbased-ccrs.bed.gz genesw99CCR\(supp_table_1\).tsv
 
 # median lengths and functional variant distance plot
 python median.py essentials/gnomadbased-ccrs.bed.gz exacresiduals/results/unfiltered/exac-regions-novariant.txt $HOME/public_html/randomplots/distances.pdf
@@ -65,5 +68,4 @@ echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar\n"
 bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
 
 # pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
-zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched.tsv
-
+zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched\(supp_table_3\).tsv

@@ -83,7 +83,7 @@ if infile == "ccrgerp.pkl":
 
   
     # making table for supplement
-    f=open('purifyingselectionregions.tsv','w')
+    f=open('purifyingselectionregions(supp_table_2).tsv','w')
     f.write("Chrom\tStart\tEnd\tGene\tRanges\tLength\tCCR Percentile Score\tMean GERP++ score\n")
     for rangegroup, gerp, ccr, gene, length, chrom in zip(ranges, gerp, ccr, genes, lengths, chroms):
         if ccr >= 95 and gerp < 0.7:
