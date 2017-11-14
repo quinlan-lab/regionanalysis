@@ -73,3 +73,6 @@ zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a 
 # fetal variant comparison
 bash fetalvars.sh
 bedtools intersect -a <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95') -b fetalvariantsalamillo.vcf fetalvariantscarss.vcf fetalvariantsdrury.vcf
+
+# regression plot for model
+python regression.py exacresiduals/results/gnomAD10x.5/weightedresiduals-cpg-novariant.txt $HOME/public_html/randomplots/regression.pdf

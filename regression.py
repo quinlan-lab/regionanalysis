@@ -16,6 +16,10 @@ from matplotlib.colors import LinearSegmentedColormap
 import toolshed as ts
 import sys
 
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['font.family'] = 'sans-serif'
+matplotlib.rcParams['font.sans-serif'] = ['Arial']
+
 it = ts.reader(sys.argv[1]) # exacresiduals/results/2016_12_10/weightedresiduals.txt
 iterable = (i for i in it)
 totcpg,totcov,totresid,totpct = [],[],[],[]
@@ -31,8 +35,8 @@ for region in iterable:
         pass # will be dealt with at next pass through loop
     elif rangeprev != ranges:
         totcpg.append(cpgprev); totcov.append(covprev); totresid.append(residprev); totpct.append(pctprev)
-        #if pct > 99:
-        #    topcpg.append(cpgprev); topcov.append(covprev); topresid.append(residprev); toppct.append(pctprev)
+        if pct > 99:
+            topcpg.append(cpgprev); topcov.append(covprev); topresid.append(residprev); toppct.append(pctprev)
     rangeprev = ranges; covprev = cov; cpgprev = cpg; residprev = resid; pctprev = pct
 
 totcpg.append(cpgprev)
@@ -51,7 +55,8 @@ fig = plt.figure()
 gs = gridspec.GridSpec(2, 1, height_ratios=[2, 2])
 ax0 = plt.subplot(gs[0])
 ax0.set_ylim(0,max(totcov))
-colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+#colors = [(1, 1, 1), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
+colors = sns.color_palette("GnBu", 10)
 cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax0.hexbin(totcpg, totcov, cmap=cm, bins='log', alpha=0.5, mincnt=1)
@@ -64,15 +69,17 @@ cbar = fig.colorbar(g, ax=ax0, orientation='vertical', extend='both', extendrect
 cbar.set_label('Number of Regions', rotation=270, labelpad=20)
 #ax0.plot(topcpg,topcov,'b.')
 x=[0,np.max(totcpg)]
-y=[intercept,cpgcoef*np.max(totcpg)]
+y=[cpgcoef*np.max(totcpg), intercept]
 ax0.plot(x,y,'k-')
+ax0.scatter(topcpg,topcov,s=1,alpha=0.5,color='k',label='Top 1%')
 ax0.set_ylabel('Sum of fraction of exomes in ExAC\n with 10x coverage for each bp')
 #ax1 = plt.subplot(gs[1])
 #ax1.plot(totcpg,totresid,'r.')
 #ax1.plot(topcpg,topresid,'b.')
 #ax1.set_xlabel('CpG fraction')
 #ax1.set_ylabel('Studentized Residuals')
+ax0.legend(loc='best')
 
 plt.tight_layout()
-plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/regression.pdf', bbox_inches='tight')
+plt.savefig(sys.argv[2], bbox_inches='tight')
 plt.close()
