@@ -62,7 +62,7 @@ for i, d in enumerate(ts.reader(var)):
     variant=d['Coding']; gene=d['Gene']; transcript=genes[gene]
     line=transcript+":"+variant # so VEP web interface can translate to VCF
     try:
-        line='\t'.join(map(str,translate(line,transcripts,get_transcript)))
+        line=map(str,translate(line,transcripts,get_transcript))
     except TypeError:
         continue
-    f.write(line+"\tGENE="+gene+";\n")
+    f.write("\t".join(line[0:2])+"\t"+"."+"\t".join(line[2:])+"\t"+"\t".join(["100","PASS","GENE="+gene+";\n"]))

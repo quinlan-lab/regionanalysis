@@ -69,3 +69,7 @@ bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because 
 
 # pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
 zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched\(supp_table_3\).tsv
+
+# fetal variant comparison
+bash fetalvars.sh
+bedtools intersect -a <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95') -b fetalvariantsalamillo.vcf fetalvariantscarss.vcf fetalvariantsdrury.vcf
