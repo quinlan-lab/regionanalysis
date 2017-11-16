@@ -9,9 +9,11 @@ variants=args.variants
 
 def isfunctional(csqs):
     for csq in csqs.split(","):
-        eff = csq.split("|", 2)[0]
-        return any([c in eff for c in ('stop_gained', 'stop_lost', 'start_lost', 'initiator_codon', 'rare_amino_acid',
-                     'missense', 'protein_altering', 'frameshift', 'inframe_insertion', 'inframe_deletion')]) or (('splice_donor' in eff or 'splice_acceptor' in eff) and 'coding_sequence' in eff)
+        eff = csq.strip("|").split("|", 2)[0]
+        if any([c in eff for c in ('stop_gained', 'stop_lost', 'start_lost', 'initiator_codon', 'rare_amino_acid',
+                     'missense', 'protein_altering', 'frameshift', 'inframe_insertion', 'inframe_deletion')]) or (('splice_donor' in eff or 'splice_acceptor' in eff) and 'coding_sequence' in eff):
+            return True
+    return False
 
 vcf = VCF(variants)
 print vcf.raw_header,
