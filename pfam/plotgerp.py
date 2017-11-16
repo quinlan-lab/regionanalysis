@@ -35,7 +35,7 @@ if infile == "ccrgerppfam.pkl":
                 fontsize=5)
     plt.xlabel("CCR")
     plt.ylabel("GERP")
-    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr_pfam.pdf', bbox_inches='tight')
+    plt.savefig(sys.argv[2], bbox_inches='tight')
 if infile == "ccrgerp.pkl":
     ct=0; highct=0; total=0
     gerp, ccr, genes, lengths, ranges, chroms = zip(*data)
@@ -56,7 +56,7 @@ if infile == "ccrgerp.pkl":
     for gene in constgenes:
         genefile.write(gene+"\n")
     fig, ax = plt.subplots()
-    ax.add_patch(patches.Rectangle((95, min(gerp)), 5, abs(0.7-min(gerp)), fill=False, edgecolor='red', linewidth=2))
+    ax.add_patch(patches.Rectangle((95, min(gerp)), 5, abs(0.7-min(gerp)), fill=False, edgecolor='k', linewidth=1, linestyle='dashed'))
     #colors = [(.9, .9, .9), (0.627451, 0.12549, 0.941176), (0.254902, 0.411765, 0.882353), (0.603922, 0.803922, 0.196078), (1, 0.647059, 0,), (1, 0, 0)]
     colors = sns.color_palette("GnBu", 10)
 
@@ -79,11 +79,10 @@ if infile == "ccrgerp.pkl":
     plt.ylabel("Mean GERP++ score")
     print "Pearson's r: " + str(pr) + "\np-value: " + str(pval)
     print "Pearson's r >=20: " + str(npr) + "\np-value: " + str(npval)
-    plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/gerpvccr.pdf', bbox_inches='tight')
-
+    plt.savefig(sys.argv[2], bbox_inches='tight')
   
     # making table for supplement
-    f=open('purifyingselectionregions(supp_table_2).tsv','w')
+    f=open(sys.argv[3],'w')
     f.write("Chrom\tStart\tEnd\tGene\tRanges\tLength\tCCR Percentile Score\tMean GERP++ score\n")
     for rangegroup, gerp, ccr, gene, length, chrom in zip(ranges, gerp, ccr, genes, lengths, chroms):
         if ccr >= 95 and gerp < 0.7:

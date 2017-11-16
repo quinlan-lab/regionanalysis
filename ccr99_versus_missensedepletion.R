@@ -16,4 +16,4 @@ dev.off()
 
 # constrained regions that are unique to CCR
 z <- y %>% filter(mpcreg > 0.4)
-write_csv(z, args[3])
+write.table(z, args[3], sep="\t", row.names=F, quote=F)

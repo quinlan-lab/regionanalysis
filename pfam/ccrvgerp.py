@@ -2,6 +2,7 @@ from bw import BigWig
 import numpy as np
 import tabix
 import cPickle as pickle
+import sys
 
 def read_gerp(gerp, region):
     chrom = region[0]
@@ -11,8 +12,8 @@ def read_gerp(gerp, region):
     gerps=np.frombuffer(gerp.values(chrom, start, end), dtype='f')
     return np.nanmean(gerps), len(gerps)
 
-gerppath='/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
-ccrpath='/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
+gerppath = sys.argv[1] #'/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
+ccrpath = sys.argv[2] #'/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
 
 def perchrom(ccr_gerp_chrom):
     ccrpath, gerppath, chrom = ccr_gerp_chrom

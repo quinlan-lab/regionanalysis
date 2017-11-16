@@ -4,6 +4,7 @@ import tabix
 from operator import itemgetter
 import subprocess as sp
 import cPickle as pickle
+import sys
 
 def intersect(variants, regions, wo = True, sortedbool=False):
     def killproc(p):
@@ -104,9 +105,9 @@ def score_gerp(pfams, gerp):
     return gerpdict
 
 #pfampath='pfam.hg19.bed' # pfam doms incl. introns
-pfampath='/uufs/chpc.utah.edu/common/home/u1021864/analysis/pfam/pfam.exonic.bed' # pfam doms by exon; sorted by pfam name, in pfamconvert.sh
-gerppath='/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
-ccrpath='/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
+pfampath = sys.argv[1] # from '/uufs/chpc.utah.edu/common/home/u1021864/analysis/pfam/pfam.genome.bed' # sorted by pfam name, in genome space
+gerppath = sys.argv[2] # '/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
+ccrpath = sys.argv[3] # '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
 
 gerp = BigWig(gerppath)
 pfams = read_pfam(pfampath)

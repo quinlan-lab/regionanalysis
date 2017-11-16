@@ -9,6 +9,8 @@
 # -> In the resulting page, select 'Exons plus' under 'Create one BED record per:' and 
 # -> click get BED
 ##############################################################################################
+HOME=/uufs/chpc.utah.edu/common/home/u1021864
+DATA=/scratch/ucgd/lustre/u1021864/serial
 if [ ! -s pfam.exonic.bed ]; then
     sed 's/^chr//g' pfam.browser.bed | awk '{split($4,a,"_exon"); print $1, $2, $3, a[1]}' OFS='\t' | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| bedtools intersect -a stdin -b $HOME/analysis/exacresiduals/flatexome.bed -wb | awk '{print $1,$2,$3,$4,$8}' OFS='\t' | sort -k4,4 -k1,1 -k2,2n > pfam.exonic.bed
     sort -k1,1 -k2,2n pfam.exonic.bed | bgzip -c > pfam.exonic.bed.gz; tabix pfam.exonic.bed.gz
@@ -38,10 +40,11 @@ python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcoun
 #
 # generate gerp v ccr plots
 # 
-python gerppfam.py
-python plotgerp.py ccrgerppfam.pkl
-python ccrvgerp.py
-python plotgerp.py ccrgerp.pkl
+sort -k4,4 pfam.genome.bed > pfamsorted.bed
+python gerppfam.py pfamsorted.bed $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz
+python plotgerp.py ccrgerppfam.pkl $HOME/public_html/randomplots/gerpvccr_pfam.pdf
+python ccrvgerp.py $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz
+python plotgerp.py ccrgerp.pkl $HOME/public_html/randomplots/gerpvccr.pdf purifyingselectionregions\(supp_table_2\).tsv
 #
 # nodom analysis
 #
@@ -64,3 +67,7 @@ echo $TOT
 # 4. CCRs that are near a Pfam domain  (need to define breakpoint)
 # 5. CCRs that are far away from a Pfam domain (need to define breakpoint)
 # from nodomplot.py:
+
+# high ccrs not intersecting with PFam domains
+bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v1.20171112.bed12.bed.gz | awk '$5>=90') -b pfam.genome.gene.bed.gz -sorted -v | wc -l
+bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v1.20171112.bed12.bed.gz | awk '$5>=99') -b pfam.genome.gene.bed.gz -sorted -v | wc -l
