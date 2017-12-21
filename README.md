@@ -1,4 +1,4 @@
-#To run analysis here use branch master:
+# To run analysis here use branch master:
 
 Folder located at: /uufs/chpc.utah.edu/common/home/u1021864/analysis ("analysis" or as it is titled here regionanalysis)
 
@@ -8,7 +8,7 @@ Use https://github.com/quinlan-lab/exacresiduals/tree/test (branch test is the m
 
 Folder located at: /uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals ("exacresiduals")
 
-##Under the folder "analysis":
+## Under the folder "analysis":
 
 There is a folder titled "ogfiles" (original files) where I put the files as they originally were either converted in Excel to TXT form if that was the case, or gene tsvs from MacArthur's lab or TXTs from UCSC containing TFBS regions or the like.  You probably don't need to use this folder but there are scripts that create the files used in the analysis that run using the files in this folder.
 
@@ -45,25 +45,25 @@ is plenty to run it.
 
 The script "plot.py" is for making the Monte Carlo plots, and works as shown in "generateplots.sh".
 
-##old comparison data:
-###miRNA (TS/TargetScan file, mirna.txt):
+## old comparison data:
+### miRNA (TS/TargetScan file, mirna.txt):
 the higher the context score percentile, the lower the content score and the greater the fold repression of miRNA at the site
-####try 85%+ score (top 35%)
-###chromatin data (ChromHMM, chromatinseg.txt):
+#### try 85%+ score (top 35%)
+### chromatin data (ChromHMM, chromatinseg.txt):
 active promoter means active intergenic hypomethylated region
-####ignore heterochromatin, CNVs, use 1,2,3,4,5,6,7,8 (top 58%)
-###dna methylation (took RRBS, not 450k for quantity reasons, methylation.txt)
+#### ignore heterochromatin, CNVs, use 1,2,3,4,5,6,7,8 (top 58%)
+### dna methylation (took RRBS, not 450k for quantity reasons, methylation.txt)
 any site should be okay
-####try percentMeth=60%+ (top 25%)
-###DNAse I hypersens. sites (dnase.txt)
+#### try percentMeth=60%+ (top 25%)
+### DNAse I hypersens. sites (dnase.txt)
 the higher the score, the more sensitive.
-####try greater than 400 signal score, doesn't seem to be many greater than 900 (top 21%)
-###TFBS sites (tfbs.txt)
+#### try greater than 400 signal score, doesn't seem to be many greater than 900 (top 21%)
+### TFBS sites (tfbs.txt)
 the higher the score, the more signal seen.
-####max is 1000, so try 600+ (top 18%)
-###histone modifications (histonemod.txt)
+#### max is 1000, so try 600+ (top 18%)
+### histone modifications (histonemod.txt)
 just like TFBS and DNAse I, higher score = more signal
-####max is 1000, try 700+ (top 33%)
-###RNA binding sites (rnabinding.txt)
+#### max is 1000, try 700+ (top 33%)
+### RNA binding sites (rnabinding.txt)
 just like DNAse, the higher the score the more binding
-####doesn't seem to pass 700, so 300+ (top 20%)
+#### doesn't seem to pass 700, so 300+ (top 20%)
