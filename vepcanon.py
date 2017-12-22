@@ -4,7 +4,7 @@ import operator
 from cyvcf2 import VCF
 
 s=set()
-exac = VCF('/uufs/chpc.utah.edu/common/home/u6000771/Projects/gemini_install/data/gemini_data/ExAC.r0.3.sites.vep.tidy.vcf.gz')
+exac = VCF('/scratch/ucgd/lustre/u1021864/serial/ExAC.r1.sites.vt.vep.vcf.gz')
 kcsq = exac["CSQ"]["Description"].split(":")[1].strip(' "').split("|")
 for chrom, viter in it.groupby(exac, operator.attrgetter("CHROM")):
     for v in viter:
