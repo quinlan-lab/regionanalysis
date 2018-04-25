@@ -25,16 +25,16 @@ if [ ! -s Pfam-A.clans.tsv ]; then
     wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.clans.tsv.gz
     gunzip Pfam-A.clans.tsv.gz
 fi
-bedtools intersect -a ../exacresiduals/gnomad10x.5-ccrs.bed.gz -b pfam.genome.gene.bed -wao > ccr-pfam.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
+bedtools intersect -a ../exacresiduals/gnomad10x.5syn-ccrs.bed.gz -b pfam.genome.gene.bed -wao > ccr-pfam.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
 cat ccr-pfam.bed | python ccrpfam.py
 paste tmp/nodomccrs tmp/domccrs | python ../hist.py -o pfam_dist.pdf -t "gnomad based CCR v Pfam" -l "nodoms" "doms" # gnomad based CCR
 awk '$14>90' ccr-pfam.bed | cut -f 18 | sort | uniq -c | sort -k1,1nr | head -200 | sed '1d' | sed 's/^\s*\S*//g' > top100doms #top 100 domains
-bedtools intersect -b ../exacresiduals/gnomad10x.5-ccrs.bed.gz -a pfam.genome.gene.bed -u | cut -f 4 | sort | uniq > pfams.txt # all ccr intersecting pfams
+bedtools intersect -b ../exacresiduals/gnomad10x.5syn-ccrs.bed.gz -a pfam.genome.gene.bed -u | cut -f 4 | sort | uniq > pfams.txt # all ccr intersecting pfams
 cut -f 4 pfam.genome.gene.bed | sort | uniq -c | sed 's/^\s*//g' > pfamcounts.txt # counts of pfams
 #
 # histograms of ccr dists across pfams #
 #
-bedtools intersect -a pfam.genome.gene.bed -b ../exacresiduals/gnomad10x.5-ccrs.bed.gz -wb | sort -k4,4 > pfam-ccr.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
+bedtools intersect -a pfam.genome.gene.bed -b ../exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb | sort -k4,4 > pfam-ccr.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
 python fameval.py -i pfam-ccr.bed > pfamshist.txt
 python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcounts.txt -o $HOME/public_html/randomplots/pfam_hists\(supp_doc_1\).pdf
 #
@@ -43,7 +43,7 @@ python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcoun
 sort -k4,4 pfam.genome.bed > pfamsorted.bed
 python gerppfam.py pfamsorted.bed $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz
 python plotgerp.py ccrgerppfam.pkl $HOME/public_html/randomplots/gerpvccr_pfam.pdf
-python ccrvgerp.py $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz
+python ccrvgerp.py $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5syn-ccrs.bed.gz
 python plotgerp.py ccrgerp.pkl $HOME/public_html/randomplots/gerpvccr.pdf purifyingselectionregions\(supp_table_2\).tsv
 #
 # nodom analysis

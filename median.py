@@ -26,6 +26,8 @@ for i, d in enumerate(ts.reader(sys.argv[2], header="ordered")):
     if d['varflag'] == "VARTRUE":
         continue
     length=sum([float(i.split("-")[1]) - float(i.split("-")[0]) for i in d['ranges'].split(",")])
+    if length > 4000:
+        print d['ranges']
     lengths.append(length)
 
 matplotlib.rcParams.update({'font.size': 10})
