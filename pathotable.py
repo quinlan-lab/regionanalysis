@@ -20,6 +20,8 @@ for line in f:
     else:
         ccrs[ccr] += 0
     
+print "Last bin total:"
+tot=0
 for ccr in ccrs:
     if ccrs[ccr] == 0:
         bins[0] += 1
@@ -43,7 +45,9 @@ for ccr in ccrs:
         bins[9] += 1
     if ccrs[ccr] >= 10:
         bins["10+"] += 1
+        tot+=ccrs[ccr]
 
+print tot
 print bins
 
 def autolabel(rects, ax):
