@@ -5,6 +5,7 @@ from bisect import bisect_left
 import gzip
 from collections import defaultdict
 from operator import itemgetter
+from itertools import groupby
 import numpy as np
 import sys
 import seaborn as sns
@@ -59,36 +60,38 @@ def exomemap(s, e, g, gdict):
     return Es, Ee
 
 with open(ccrs, 'r') as f:
-    rangeprev = None
+    ranges = []
     for line in f:
         fields = line.strip().split("\t")
         r = fields[6]; g = fields[3] # ranges, gene
-        if rangeprev and rangeprev + geneprev != r + g:
-            se = [i.split("-") for i in rangeprev.split(",")]
-            s = int(se[0][0]); e = int(se[-1][-1])
-            Es, Ee = exomemap(s, e, geneprev, gdict)
-            cdict[geneprev].append((Es, Ee, s, e))
-        rangeprev = r; geneprev = g; lineprev = line
-se = [i.split("-") for i in rangeprev.split(",")]
-s = int(se[0][0]); e = int(se[-1][-1])
-Es, Ee = exomemap(s, e, geneprev, gdict)
-cdict[geneprev].append((Es, Ee, s, e))
+        ranges.append((r,g))
+    sorter = itemgetter(-1,0)
+    grouper = itemgetter(-1,0)
+    for key, grp in groupby(sorted(ranges, key = sorter), grouper):
+        grp = list(grp)
+        ranges = grp[0][0]
+        gene = grp[0][-1]
+        se = [i.split("-") for i in ranges.split(",")]
+        s = int(se[0][0]); e = int(se[-1][-1])
+        Es, Ee = exomemap(s, e, gene, gdict)
+        cdict[gene].append((Es, Ee, s, e))
 
 with open(lowerccrs, 'r') as f:
-    rangeprev = None
+    ranges = []
     for line in f:
         fields = line.strip().split("\t")
         r = fields[6]; g = fields[3] # ranges, gene
-        if rangeprev and rangeprev + geneprev != r + g:
-            se = [i.split("-") for i in rangeprev.split(",")]
-            s = int(se[0][0]); e = int(se[-1][-1])
-            Es, Ee = exomemap(s, e, geneprev, gdict)
-            lcdict[geneprev].append((Es, Ee, s, e))
-        rangeprev = r; geneprev = g; lineprev = line
-se = [i.split("-") for i in rangeprev.split(",")]
-s = int(se[0][0]); e = int(se[-1][-1])
-Es, Ee = exomemap(s, e, geneprev, gdict)
-lcdict[geneprev].append((Es, Ee, s, e))
+        ranges.append((r,g))
+    sorter = itemgetter(-1,0)
+    grouper = itemgetter(-1,0)
+    for key, grp in groupby(sorted(ranges, key = sorter), grouper):
+        grp = list(grp)
+        ranges = grp[0][0]
+        gene = grp[0][-1]
+        se = [i.split("-") for i in ranges.split(",")]
+        s = int(se[0][0]); e = int(se[-1][-1])
+        Es, Ee = exomemap(s, e, gene, gdict)
+        lcdict[gene].append((Es, Ee, s, e))
  
 #with gzip.open(pfamlist, 'rb') as f:
 with open(pfamlist, 'r') as f:

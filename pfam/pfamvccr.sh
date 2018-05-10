@@ -19,7 +19,6 @@ fi
 if [ ! -s pfam.genome.gene.bed ]; then
     sed 's/^chr//g' pfam.genome.bed | grep -P "^1|^2|^3|^4|^5|^6|^7|^8|^9|^10|^11|^12|^13|^14|^15|^16|^17|^18|^19|^20|^21|^22"| bedtools intersect -a stdin -b $HOME/analysis/exacresiduals/flatexome.bed -wa -wb | awk '{print $1,$2,$3,$4,$8}' OFS='\t' | sort -k4,4 -k1,1 -k2,2n | uniq > pfam.genome.gene.bed
     sort -k1,1 -k2,2n pfam.genome.gene.bed | bgzip -c > pfam.genome.gene.bed.gz; tabix pfam.genome.gene.bed.gz
-    #python flattenpfams.py $DATA/pfam.bed > pfam.exonic.bed # flatten exomes across transcripts
 fi
 if [ ! -s Pfam-A.clans.tsv ]; then
     wget ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.clans.tsv.gz
@@ -41,7 +40,7 @@ python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcoun
 # generate gerp v ccr plots
 # 
 sort -k4,4 pfam.genome.bed > pfamsorted.bed
-python gerppfam.py pfamsorted.bed $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz
+python gerppfam.py pfamsorted.bed $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5syn-ccrs.bed.gz
 python plotgerp.py ccrgerppfam.pkl $HOME/public_html/randomplots/gerpvccr_pfam.pdf
 python ccrvgerp.py $DATA/hg19.gerp.bw $HOME/analysis/exacresiduals/gnomad10x.5syn-ccrs.bed.gz
 python plotgerp.py ccrgerp.pkl $HOME/public_html/randomplots/gerpvccr.pdf purifyingselectionregions\(supp_table_2\).tsv

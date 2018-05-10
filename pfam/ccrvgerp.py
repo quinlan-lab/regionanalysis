@@ -3,6 +3,8 @@ import numpy as np
 import tabix
 import cPickle as pickle
 import sys
+from itertools import groupby
+from operator import itemgetter
 
 def read_gerp(gerp, region):
     chrom = region[0]
@@ -20,27 +22,23 @@ def perchrom(ccr_gerp_chrom):
     ccr = tabix.open(ccrpath)
     gerp = BigWig(gerppath)
 
-    gerpdict={}; lengths=[]; scores=[]; rangeprev = None
+    gerpdict={}; gerps=[]
     for region in ccr.querys(chrom):
-        gene=region[3]; ranges=region[6]
+        gene=region[3]; ranges=region[6]; pctile=float(region[-1])
         gerpscore, overlap = read_gerp(gerp, region) # _ = pfam, redundant variable
-        if rangeprev is None:
-            pass # will be dealt with at next pass through loop
-        elif rangeprev+geneprev == ranges+gene:
-            lengths.append(overprev)
-            scores.append(gerpprev)
-        elif rangeprev+geneprev != ranges+gene:
-            lengths.append(overprev)
-            scores.append(gerpprev)
-            ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            gerpdict[rangeprev+geneprev]=(ccrprevscore,pctile,geneprev,sum(lengths),rangeprev,chrom)
-            lengths=[]; scores=[]
-        rangeprev = ranges; overprev = overlap; gerpprev = gerpscore; pctile=float(region[-1]); geneprev = gene
+        gerps.append((gerpscore, overlap, ranges, gene, pctile))
+    sorter = itemgetter(2,3)
+    grouper = itemgetter(2,3)
+    for key, grp in groupby(sorted(gerps, key = sorter), grouper):
+        lengths = []; scores = []
+        grp = list(grp)
+        ranges = grp[0][2]; gene = grp[0][3]; pctile = grp[0][-1]
+        for i, elem in enumerate(grp):
+            scores.append(grp[i][0])
+            lengths.append(grp[i][1])
+        gerpscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
+        gerpdict[key]=(gerpscore,pctile,gene,sum(lengths),ranges,chrom)
 
-    lengths.append(overprev)
-    scores.append(gerpprev)
-    ccrprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-    gerpdict[rangeprev+geneprev]=(ccrprevscore,pctile,geneprev,sum(lengths),rangeprev,chrom)
     return gerpdict
 
 import multiprocessing as mp

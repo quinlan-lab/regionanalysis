@@ -1,6 +1,7 @@
 from bw import BigWig
 import numpy as np
 import tabix 
+from itertools import groupby
 from operator import itemgetter
 import subprocess as sp
 import cPickle as pickle
@@ -23,27 +24,25 @@ def intersect(variants, regions, wo = True, sortedbool=False):
     return output.strip()
 
 def score_average(pfams,ccr):
-    famprev = None
-    lengths=[]; scores=[]; ccrdict={}
+    ccrdict={}; isxns = []
     for isxn in intersect(pfams, ccr).split("\n"):
         fields = isxn.strip().split("\t")
         fam = fields[3]
         overlap = float(fields[-1]) # need to add ccr*overlap/total overlap?`
         ccrscore = float(fields[-2])
-        if famprev is None:
-            pass # will be dealt with at next pass through loop
-        elif famprev == fam:  
-            lengths.append(overprev)
-            scores.append(ccrprev)
-        elif famprev != fam:
-            lengths.append(overprev)
-            scores.append(ccrprev)
-            famprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            ccrdict[famprev]=famprevscore
-            lengths=[]; scores=[]
-        famprev = fam; overprev = overlap; ccrprev = ccrscore
+        isxns.append((fam, overlap, ccrscore))
+    sorter = itemgetter(0)
+    grouper = itemgetter(0)
+    for key, grp in groupby(sorted(isxns, key = sorter), grouper):
+        grp = list(grp)
+        fam = grp[0][0]
+        lengths = []; scores = []
+        for i, elem in enumerate(grp):
+            lengths.append(grp[i][1])
+            scores.append(grp[i][-1])
+        famscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
+        ccrdict[fam]=famscore
 
-    famprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
     return ccrdict
 
 def read_ccrs(ccr, pfam):
@@ -67,7 +66,9 @@ def read_gerp(gerp, pfam):
         chrom="chr"+chrom
     start=pfam[1]; end=pfam[2]; fam=pfam[3]
     gerps=np.frombuffer(gerp.values(chrom, start, end), dtype='f')
-    return fam, np.nanmean(gerps), len(gerps)
+    meangerp=np.nanmean(gerps); lengerps=len(gerps)
+    if not np.isnan(meangerp): 
+        return fam, meangerp, lengerps
 
 def read_pfam(pfam):
     pfam=open(pfam,'r')
@@ -82,32 +83,30 @@ def read_pfam(pfam):
     return pfams
 
 def score_gerp(pfams, gerp):
-    gerpdict={}; lengths=[]; scores=[]; famprev = None
+    gerpdict={}; fams = []
     for pfam in pfams:
-        pfam, gerpscore, overlap = read_gerp(gerp, pfam) # _ = pfam, redundant variable
-        if famprev is None:
-            pass # will be dealt with at next pass through loop
-        elif famprev == pfam:  
-            lengths.append(overprev)
-            scores.append(gerpprev)
-        elif famprev != pfam:
-            lengths.append(overprev)
-            scores.append(gerpprev)
-            famprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-            gerpdict[famprev]=famprevscore
-            lengths=[]; scores=[]
-        famprev = pfam; overprev = overlap; gerpprev = gerpscore
+        result = read_gerp(gerp, pfam) # _ = pfam, redundant variableA
+        if result:
+            pfam, gerpscore, overlap = result
+            fams.append((pfam, gerpscore, overlap))
+    sorter = itemgetter(0)
+    grouper = itemgetter(0)
+    for key, grp in groupby(sorted(fams, key = sorter), grouper):
+        lengths=[]; scores=[]
+        grp = list(grp)
+        family = grp[0][0]
+        for i, elem in enumerate(grp):
+            scores.append(grp[i][1])
+            lengths.append(grp[i][-1])
+        famscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
+        gerpdict[family]=famscore
     
-    lengths.append(overprev) 
-    scores.append(gerpprev)
-    famprevscore=sum([a*b for a,b in zip(scores,lengths)])/sum(lengths)
-    gerpdict[famprev]=famprevscore
     return gerpdict
 
 #pfampath='pfam.hg19.bed' # pfam doms incl. introns
 pfampath = sys.argv[1] # from '/uufs/chpc.utah.edu/common/home/u1021864/analysis/pfam/pfam.genome.bed' # sorted by pfam name, in genome space
 gerppath = sys.argv[2] # '/scratch/ucgd/lustre/u1021864/serial/hg19.gerp.bw'
-ccrpath = sys.argv[3] # '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5-ccrs.bed.gz'
+ccrpath = sys.argv[3] # '/uufs/chpc.utah.edu/common/home/u1021864/analysis/exacresiduals/gnomad10x.5syn-ccrs.bed.gz'
 
 gerp = BigWig(gerppath)
 pfams = read_pfam(pfampath)

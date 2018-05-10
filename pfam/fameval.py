@@ -1,40 +1,39 @@
 from argparse import ArgumentParser
 import numpy as np
+from itertools import groupby
+from operator import itemgetter
 
 parser=ArgumentParser()
 #parser.add_argument("-p","--pfam", help="pfam families for histogram")
 parser.add_argument("-i","--intersection", help="intersections between pfams and ccrs")
 args=parser.parse_args()
 
-prevfam=None; prevlen=None; prevccr=None; tccr={}; tlen=0.0; 
+tccr={}; tlen=0.0; 
 
 bins=range(0,101,10)
 #pfams=open(args.pfam, 'r')
 intersect=open(args.intersection, 'r')
-for line in intersect: #sort intersection by family name
+intersections=[]
+for line in intersect:
     fields=line.strip().split("\t")
     start=int(fields[1]); end=int(fields[2]); family=fields[3]; ccr=float(fields[-1]);
     lenh=end-start
-    if family==prevfam:
-        for i in range(0,len(bins)):
-            if prevccr <= bins[i] and prevccr > bins[i-1]: # not putting >= bins[i-1] eliminates 0th percentile CCRs, also bug is bins[0-1] = bins[-1]
+    intersections.append((ccr,lenh,family))
+    sorter = itemgetter(-1)
+    grouper = itemgetter(-1) 
+for key, grp in groupby(sorted(intersections, key = sorter), grouper): #sort intersection by family name
+    grp=list(grp)
+    family=grp[0][-1]
+    for i, elem in enumerate(grp):
+        for j in range(0,len(bins)):
+            ccr = grp[i][0]
+            length = grp[i][1]
+            if ccr <= bins[j] and ccr > bins[j-1]: # not putting >= bins[j-1] eliminates 0th percentile CCRs, because bins[0-1] = bins[-1]
                 try:
-                    tccr[bins[i]]+=prevlen
+                    tccr[bins[j]]+=length
                 except KeyError:
-                    tccr[bins[i]]=prevlen
-                tlen+=prevlen
-            #elif prevccr == 0:
-            #    try:
-            #        tccr[bins[i]]+=prevlen
-            #    except KeyError:
-            #        tccr[bins[i]]=prevlen
-            #    tlen+=prevlen
-    elif prevfam!=family and prevfam is not None:
-        print prevfam + "\t" + str(tccr) + "\t" + str(tlen)
-        tlen=0.0
-        tccr={}
-    prevfam=family
-    prevlen=lenh
-    prevccr=ccr 
-
-print prevfam + "\t" + str(tccr) + "\t" + str(tlen)
+                    tccr[bins[j]]=length
+                tlen+=length
+    print family + "\t" + str(tccr) + "\t" + str(tlen)
+    tlen=0.0
+    tccr={}
