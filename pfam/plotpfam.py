@@ -7,6 +7,7 @@ import ast
 import seaborn
 seaborn.set_style(style='white')
 import matplotlib.backends.backend_pdf
+from scipy.stats import binom_test
 
 parser=ArgumentParser()
 parser.add_argument("-p","--pfam", help="pfam families for histogram") # top200doms
@@ -57,9 +58,15 @@ for pfam in pfams:
             try:
                 title = families[pfam] + "\n(" + pfam + ", N=" + counts[pfam] + ")"
             except KeyError:
-                title = pfam + " (" + counts[pfam] + ")"
+                title = "(" + pfam + ", N=" + counts[pfam] + ")"
             tccr=[[i,0] for i in bins]
             totlen=float(fields[2])
+            try:
+                x = dbins[100]
+            except:
+                x = 0
+            pval = binom_test(x, totlen, 0.1, 'greater')
+            print pval
             for i in dbins:
                 for j in range(0,len(tccr)):
                     if tccr[j][0]==i:
@@ -75,6 +82,7 @@ for pfam in pfams:
             axarr.set_ylim(0,1)
             axarr.axhline(0.1, color = 'k', lw = 0.1, ls = '--', dashes = (60, 30))
             #axarr.plot(binar, vals)
+            title += "\nBinomial p-val: " + '{:.3g}'.format(pval)
             axarr.set_title(title)
             axarr.set_xlim(0,100) #10,100
             axarr.set_xlabel('CCR Percentile')
