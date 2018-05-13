@@ -60,7 +60,6 @@ def syn_cpg_density(pairs, d, gnomad, kcsq): #anything but functional, since by 
             prevvar=str(v.start)+str(v.end)+str(v.ALT[0])
     return ct_vars, all_vars
 
-rangeprev = None
 sorter = itemgetter('chrom','gene','ranges')
 grouper = itemgetter('chrom','gene','ranges')
 ccrtemp = []
@@ -104,7 +103,7 @@ cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax.hexbin(cpg, ctd, cmap=cm, bins='log', alpha=0.5, mincnt=1)
 def y_format(x,y):
-    return '{:.0f}'.format(round(10**x) if round(10**x,-1) == 0 else round(10**x,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
+    return '{:.0f}'.format(round(10**x) if round(10**x,-1) <= 100 else round(10**x,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
 counts,edges=np.histogram(g.get_array(),bins=8)
 cbar = fig.colorbar(g, ax=ax, orientation='vertical', extend='both', extendrect=True, drawedges=False, ticks=edges, format=FuncFormatter(y_format))
 cbar.set_label('Number of Regions', rotation=270, labelpad=20)
@@ -124,8 +123,6 @@ colors = sns.color_palette("GnBu", 10)
 cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax.hexbin(cpg, alld, cmap=cm, bins='log', alpha=0.5, mincnt=1)
-def y_format(x,y):
-    return '{:.0f}'.format(round(10**x) if round(10**x,-1) == 0 else round(10**x,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
 counts,edges=np.histogram(g.get_array(),bins=8)
 cbar = fig.colorbar(g, ax=ax, orientation='vertical', extend='both', extendrect=True, drawedges=False, ticks=edges, format=FuncFormatter(y_format))
 cbar.set_label('Number of Regions', rotation=270, labelpad=20)

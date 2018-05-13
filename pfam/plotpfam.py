@@ -8,6 +8,7 @@ import seaborn
 seaborn.set_style(style='white')
 import matplotlib.backends.backend_pdf
 from scipy.stats import binom_test
+import os.path
 
 parser=ArgumentParser()
 parser.add_argument("-p","--pfam", help="pfam families for histogram") # top200doms
@@ -16,6 +17,9 @@ parser.add_argument("-s","--stats", help="pfams bp covered in ccr %ile bins") #p
 parser.add_argument("-q","--count", help="occurrences of each pfam domain") #pfamcounts.txt
 parser.add_argument("-o","--output", help="histogram pic") #pfam_hists.pdf
 args=parser.parse_args()
+table=open(os.path.dirname(os.path.expandvars(args.output))+'/pfam_stats(supp_table_3).tsv','w')
+table.write('domain\tfull_name(if_applicable)\tnumber_of_occurrences\ttotal_bp\tbp_in_90_ccr_bin\tbinomial_p_val\n')
+
 with open(args.pfam) as f:
     pfams=[_ for _ in f]
 counts={}
@@ -56,8 +60,10 @@ for pfam in pfams:
         dbins=ast.literal_eval(fields[1]) #(dictionary of bins)
         if pfam == pfam2:
             try:
+                name = families[pfam]
                 title = families[pfam] + "\n(" + pfam + ", N=" + counts[pfam] + ")"
             except KeyError:
+                name = "N/A"
                 title = "(" + pfam + ", N=" + counts[pfam] + ")"
             tccr=[[i,0] for i in bins]
             totlen=float(fields[2])
@@ -66,6 +72,7 @@ for pfam in pfams:
             except:
                 x = 0
             pval = binom_test(x, totlen, 0.1, 'greater')
+            print >> table, "\t".join(map(str,[pfam, name, counts[pfam], totlen, x, '{:.3g}'.format(pval)]))
             print pval
             for i in dbins:
                 for j in range(0,len(tccr)):
@@ -100,3 +107,4 @@ for fig in xrange(1, plt.gcf().number+1): ## will open an empty extra figure :(
     pdf.savefig(fig, bbox_inches='tight' )
 pdf.close()
 print maxval
+table.close()

@@ -52,7 +52,7 @@ bedtools intersect -a pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-
 bedtools intersect -a benign.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benign-ccr.txt
 
 # generate fig 2 plot
-python fig2plot.py clinvar
+python stepplot.py clinvar
 
 # ad gene files
 python $HOME/software/pathoscore/pathoscore.py annotate pathogenic.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.pathogenic.combine
@@ -120,4 +120,4 @@ bedtools intersect -a control.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccr
 python oddsratio.py -f neurodev-ccr.txt control-ccr.txt -o samocha
 # generate fig 2 plot
 
-python fig2plot.py samocha 
+python stepplot.py samocha 

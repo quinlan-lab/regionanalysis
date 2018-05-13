@@ -7,12 +7,13 @@ bash runproplot.sh # contains proplot.py
 
 # making Figures 2/5
 
-bash runpathoscore.sh # contains ~/software/pathoscore/pathoscore.py (modified to spit out a pickle dump), fig2plot.py, oddsratio.py, combine.py
+bash runpathoscore.sh # contains ~/software/pathoscore/pathoscore.py (modified to spit out a pickle dump), stepplot.py, oddsratio.py, combine.py
 Rscript genes_with_ccrs_above_pct.R essentials/gnomadbased-ccrs.bed.gz $HOME/public_html/randomplots/genes_with_ccrs_above_pct.pdf
 
 # making Figure 3
 
 bash pfam/pfamvccr.sh # contains pfam/pfamhist.py, pfam/gerppfam.py, pfam/fameval.py
+#also outputs supp doc 1 (all pfam histograms) and supp table 3(?) (table contains all stats for each pfam)
 
 # making Figure 4
 (printf "chr\tstart\tend\tgene\tccr\tmpcreg\n"; bedtools intersect -a essentials/gnomadbased-ccrs.bed.gz -b essentials/mpc.regions.clean.sorted.bed.gz -wao -sorted | cut -f 1,2,3,4,14,19) | bgzip > ccr.v.mpcregions.bed.gz
@@ -76,3 +77,15 @@ bedtools intersect -a <(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95')
 
 # regression plot for model
 python regression.py exacresiduals/results/gnomAD10x.5/weightedresiduals-cpg-novariant.txt $HOME/public_html/randomplots/regression.pdf
+
+# creating C-T synonymous density and all synonymous density v CpG density plots for CCRs >=20 bp, without CpG = 0.
+python syndensity.py
+
+# creating C-T synonymous density and all synonymous density v CpG density plots for exons >=20 bp
+python cpgexoncalc.py
+
+# pLI v GERP comparison
+python genegerp.py
+
+# comparison with pLI and missense depletion
+bash venndiagram.sh

@@ -54,7 +54,7 @@ cmap_name='mymap'
 cm = LinearSegmentedColormap.from_list(cmap_name, colors)
 g=ax.hexbin(pli, gerp, cmap=cm, bins='log', alpha=0.5, mincnt=1)
 def y_format(x,y):
-    return '{:.0f}'.format(1 if round(10**x-1,-1) == 0 else round(10**x-1,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
+    return '{:.0f}'.format(round(10**x) if round(10**x,-1) <= 10 else round(10**x,-1)) # not 100% accurate binning, but the -1 is so we can label the bottom of the colorbar as 0, doesn't throw off calc by much
 counts,edges=np.histogram(g.get_array(),bins=8)
 cbar = fig.colorbar(g, ax=ax, orientation='vertical', extend='both', extendrect=True, drawedges=False, ticks=edges, format=FuncFormatter(y_format))
 cbar.set_label('Number of Genes', rotation=270, labelpad=20)
