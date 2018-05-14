@@ -63,7 +63,14 @@ bedtools intersect -a adgene.pathogenic.combine.vcf.gz -b exacresiduals/gnomad10
 bedtools intersect -a adgene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benign-adgene-ccr.txt
 
 # create oddsratio plot
-python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-adgene-ccr.txt benign-adgene-ccr.txt -o clinvar
+python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-adgene-ccr.txt benign-adgene-ccr.txt -o clinvar -l "All ClinVar Genes" "AD ClinVar Genes"
+
+# create exac v1 file
+bedtools intersect -a pathogenic.combine.vcf.gz -b exacresiduals/exacv1syn-ccrs.bed.gz -wb > patho-exac.txt
+bedtools intersect -a benign.combine.vcf.gz -b exacresiduals/exacv1syn-ccrs.bed.gz -wb > benign-exac.txt
+
+# create supplemental figure plot
+python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-exac.txt benign-exac.txt -o clinvarcomp -l "gnomAD" "ExAC v1"
 
 # hi gene files
 python $HOME/software/pathoscore/pathoscore.py annotate pathogenic.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/hi_genes/hi_gene_complement.bed.gz --prefix higene.pathogenic.combine
@@ -74,7 +81,7 @@ bedtools intersect -a higene.pathogenic.combine.vcf.gz -b exacresiduals/gnomad10
 bedtools intersect -a higene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benign-higene-ccr.txt
 
 # create oddsratio plot
-python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-higene-ccr.txt benign-higene-ccr.txt -o clinvar.hi
+python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-higene-ccr.txt benign-higene-ccr.txt -o clinvar.hi -l "All ClinVar Genes" "HI ClinVar Genes"
 
 # hi gene files
 python $HOME/software/pathoscore/pathoscore.py annotate pathogenic.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/hi_genes/clingen_hi_gene_complement.bed.gz --prefix clingen_higene.pathogenic.combine
@@ -85,7 +92,7 @@ bedtools intersect -a clingen_higene.pathogenic.combine.vcf.gz -b exacresiduals/
 bedtools intersect -a clingen_higene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benign-clingen_higene-ccr.txt
 
 # create oddsratio plot
-python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-clingen_higene-ccr.txt benign-clingen_higene-ccr.txt -o clinvar.clingen_hi
+python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-clingen_higene-ccr.txt benign-clingen_higene-ccr.txt -o clinvar.clingen_hi -l "All ClinVar Genes" "ClinGen HI ClinVar Genes"
 
 # table of top bin (>95%) CCRs by number of intersections with pathogenic variants:
 # this line grabs only non-gnomAD or ExAC pathogenics that are functional

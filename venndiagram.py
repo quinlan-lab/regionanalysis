@@ -59,8 +59,8 @@ for pli in plis: # pli only has one score for each gene
     if float(pli[-1]) < 0.9: continue
     chrom = pli[0]; start = int(pli[1]); end = int(pli[2]); gene = pli[3]
     pligenes.add(gene)
-    plitree[chrom].add(start, end, gene)
-    plilist[chrom].append((start, gene, end))
+    plitree[chrom].add(start+1, end, gene) # IntervalTree is 1-based search
+    plilist[chrom].append((start+1, gene, end)) # IntervalTree is 1-based search
 #sanity check:
 #print plitree['1'].search(9770513,9787104)
 

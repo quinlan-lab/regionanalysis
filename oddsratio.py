@@ -12,11 +12,18 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-f", "--varfiles", help = "variant intersection files for plot", nargs = 2)
 parser.add_argument("-a", "--adgenefiles", help = "AD gene variant intersection files for AD gene part of plot, optional", nargs = 2)
 parser.add_argument("-o", "--output", help = "output file name for plot")
+parser.add_argument("-l", "--labels", nargs = 2, help = "labels for plot")
 args = parser.parse_args()
 varfiles = args.varfiles
 adgenefiles = args.adgenefiles
 filename = args.output
-
+labels = args.labels
+if labels:
+    label=labels[0]
+    adlabel=labels[-1]
+else:
+    label="All Genes"
+    adlabel="AD Genes"
 patho = open(varfiles[0], "r")
 benign = open(varfiles[1], "r")
 if adgenefiles:
@@ -161,7 +168,7 @@ ax.errorbar([i for i in lefts], ors, yerr=y_r, color='k', capsize=4, fmt="none")
 bottoms = [height if height<1 else 1 for height in ors] #2 for log2
 ors2 = [1-height if height<1 else height-1 for height in ors] #2 for log2
 print ors2, bottoms, ticks
-rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks,color=(161/255.0,218/255.0,215/255.0), edgecolor=(96/255.0, 133/255.0, 131/255.0),label="All Genes")
+rects=ax.bar(left=lefts,height=ors2,width=width,bottom=bottoms,tick_label=ticks,color=(161/255.0,218/255.0,215/255.0), edgecolor=(96/255.0, 133/255.0, 131/255.0),label=label)
 #autolabel(rects, ax)
 ax.axhline(y=1, color='k') # 2 for log2
 ax.set_title(filename[0].upper()+filename[1:])
@@ -180,7 +187,7 @@ if adgenefiles:
     abottoms = [height if height<1 else 1 for height in aors] #2 for log2
     aors2 = [1-height if height<1 else height-1 for height in aors] #2 for log2
     print aors2, abottoms, aticks
-    rects=ax.bar(left=alefts,height=aors2,width=width,bottom=abottoms,tick_label=aticks,color=(56/255.0,138/255.0,172/255.0),edgecolor=(96/255.0, 133/255.0, 131/255.0),label="AD Genes")
+    rects=ax.bar(left=alefts,height=aors2,width=width,bottom=abottoms,tick_label=aticks,color=(56/255.0,138/255.0,172/255.0),edgecolor=(96/255.0, 133/255.0, 131/255.0),label=adlabel)
     ax.set_xticks(alefts-width*.5)
     #autolabel(rects, ax)
     ax.set_title(filename[0].upper()+filename[1:])

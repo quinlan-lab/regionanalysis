@@ -89,3 +89,6 @@ python genegerp.py
 
 # comparison with pLI and missense depletion
 bash venndiagram.sh
+
+# coverage justification
+bash cutofftest.sh
