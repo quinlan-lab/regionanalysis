@@ -99,8 +99,7 @@ python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-clingen_higene-ccr.
 python filtervars.py pathogenic.combine.vcf.gz > clinvarfunc.vcf
 bedtools intersect -a <(zcat exacresiduals/gnomad10x.5syn-ccrs.bed.gz | awk '$14>=95') -b clinvarfunc.vcf -wao > all-ccr-95-patho.txt
 bedtools intersect -a <(zcat exacresiduals/gnomad10x.5syn-ccrs.bed.gz | awk '$14>=99') -b clinvarfunc.vcf -wao > all-ccr-99-patho.txt
-python pathotable.py all-ccr-95-patho.txt "95"
-python pathotable.py all-ccr-99-patho.txt "99"
+python pathotable.py all-ccr-95-patho.txt all-ccr-99-patho.txt
 grep -v "^#" clinvarfunc.vcf | wc -l 
 
 ###########################################
