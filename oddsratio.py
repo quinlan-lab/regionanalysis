@@ -110,10 +110,11 @@ bresults, rset, lens, totlen = generateresults(benign, bresults, rset, lens, tot
 keys,ors,props,cis=[],[],[],[]
 for i in presults:
     a,b,c,d=presults[i][0],bresults[i][0],presults[i][1],bresults[i][1]
-    try:    
-        odds=(a*d)/(b*c)
-    except ZeroDivisionError:
-        odds=(a*d)/(1*c)
+    if 0 == b: b=1
+    if 0 == c: c=1
+    odds=(a*d)/(b*c)
+    if 0 == a: a=1
+    if 0 == d: d=1
     or_se=np.sqrt((1/a)+(1/b)+(1/c)+(1/d))
     or_ci = conf_interval(odds, or_se)
     keys.append(i); ors.append(odds)
@@ -137,10 +138,11 @@ if adgenefiles:
     akeys,aors,aprops,acis=[],[],[],[]
     for i in padresults:
         a,b,c,d=padresults[i][0],badresults[i][0],padresults[i][1],badresults[i][1]
-        try:    
-            odds=(a*d)/(b*c)
-        except ZeroDivisionError:
-            odds=(a*d)/(1*c)
+        if 0 == b: b=1
+        if 0 == c: c=1
+        odds=(a*d)/(b*c)
+        if 0 == a: a=1
+        if 0 == d: d=1
         or_se=np.sqrt((1/a)+(1/b)+(1/c)+(1/d))
         or_ci = conf_interval(odds, or_se)
         akeys.append(i); aors.append(odds)
