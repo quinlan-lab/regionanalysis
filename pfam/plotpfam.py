@@ -35,7 +35,7 @@ with open(args.clans) as f:
 
 count=len(pfams)
 stats=open(args.stats,"r")
-bins=range(10,101,10)
+bins=range(5,101,5)
 
 def make_axes_visible(axes):
     for ax in axes.flatten():
@@ -71,23 +71,23 @@ for pfam in pfams:
                 x = dbins[100]
             except:
                 x = 0
-            pval = binom_test(x, totlen, 0.1, 'greater')
+            pval = binom_test(x, totlen, 0.05, 'greater')
             print >> table, "\t".join(map(str,[pfam, name, counts[pfam], totlen, x, '{:.3g}'.format(pval)]))
             print pval
             for i in dbins:
                 for j in range(0,len(tccr)):
                     if tccr[j][0]==i:
                         tccr[j][1]=(dbins[i]/totlen)
-            vals = [i[1] for i in tccr]; binar = [i[0]-5 for i in tccr] # start at 0 and position bar in the middle of the bin
+            vals = [i[1] for i in tccr]; binar = [i[0]-2.5 for i in tccr] # start at 0 and position bar in the middle of the bin
             #binar.insert(0,0)
-            print vals, [i + 5 for i in binar]
+            print vals, [i + 2.5 for i in binar]
             width = (binar[1]-binar[0])+.1
             maxval = max(maxval,max(vals))
             f, axarr = plt.subplots(1)#, sharex=True)
             axarr.bar(binar, vals, width = width, color = (161/255.0,218/255.0,215/255.0), alpha = 0.7, edgecolor = (96/255.0, 133/255.0, 131/255.0))
-            axarr.xaxis.set_ticks(np.arange(0, 110, 10)) #0-100
+            axarr.xaxis.set_ticks(np.arange(0, 110, 5)) #0-100
             axarr.set_ylim(0,1)
-            axarr.axhline(0.1, color = 'k', lw = 0.1, ls = '--', dashes = (60, 30))
+            axarr.axhline(0.05, color = 'k', lw = 0.1, ls = '--', dashes = (60, 30))
             #axarr.plot(binar, vals)
             title += "\nBinomial p-val: " + '{:.3g}'.format(pval)
             axarr.set_title(title)

@@ -1,3 +1,5 @@
+# TODO: note that even though this is "pfamvccr" it actually contains the GERP v CCR calculations
+
 #mysql --user=genome --host=genome-mysql.soe.ucsc.edu -D hg19 -A -e  'SELECT chrom,chromStart,chromEnd,name from ucscGenePfam;' | perl -pe 's/^chr//' | bgzip -c > pfam.hg19.bed.gz
 ##############################################################################################
 # make input: "Pfam A domains with chromosomal co-ordinates from UCSC table browser" #pfam.browser.bed
@@ -35,6 +37,7 @@ cut -f 4 pfam.genome.gene.bed | sort | uniq -c | sed 's/^\s*//g' > pfamcounts.tx
 #
 bedtools intersect -a pfam.genome.gene.bed -b ../exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb | sort -k4,4 > pfam-ccr.bed # pfam.bed is GRCh37.gtf with intron-containing pfam file across chrom 1-22, X, Y;
 python fameval.py -i pfam-ccr.bed > pfamshist.txt
+#awk 'NR==FNR{a[$1]; next} {for (i in a) {if (i==$1) print $0}}' 12doms pfamshist.txt > 12hist.txt
 python plotpfam.py -p pfams.txt -s pfamshist.txt -c Pfam-A.clans.tsv -q pfamcounts.txt -o $HOME/public_html/randomplots/pfam_hists\(supp_doc_1\).pdf
 #
 # generate gerp v ccr plots
@@ -67,6 +70,6 @@ echo $TOT
 # 5. CCRs that are far away from a Pfam domain (need to define breakpoint)
 # from nodomplot.py:
 
-# high ccrs not intersecting with PFam domains
-bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v1.20171112.bed12.bed.gz | awk '$5>=90') -b pfam.genome.gene.bed.gz -sorted -v | wc -l
-bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v1.20171112.bed12.bed.gz | awk '$5>=99') -b pfam.genome.gene.bed.gz -sorted -v | wc -l
+# high ccrs not intersecting with Pfam domains
+bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=95') -b pfam.genome.gene.bed.gz -sorted -v | wc -l
+bedtools intersect -a <(zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=99') -b pfam.genome.gene.bed.gz -sorted -v | wc -l

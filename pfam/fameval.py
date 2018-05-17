@@ -10,7 +10,7 @@ args=parser.parse_args()
 
 tccr={}; tlen=0.0; 
 
-bins=range(0,101,10)
+bins=range(0,101,5)
 #pfams=open(args.pfam, 'r')
 intersect=open(args.intersection, 'r')
 intersections=[]
