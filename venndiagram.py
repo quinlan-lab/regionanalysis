@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 from matplotlib_venn import venn3, venn3_circles, venn3_unweighted
 from itertools import groupby
 from operator import itemgetter
+import numpy as np
 
 
 # create list of tuple intervals for each ccr, pli, and missense z interval and a tree of those intervals
@@ -137,5 +138,28 @@ print "Gene based"
 print len(ccrgenes)
 plt.clf()
 # basic set theory
-v = venn3_unweighted(subsets = (len(ccrgenes - mpcgenes - pligenes), len(mpcgenes - ccrgenes - pligenes), len(mpcgenes & ccrgenes - pligenes), len(pligenes - ccrgenes - mpcgenes), len(pligenes & ccrgenes - mpcgenes), len(pligenes & mpcgenes - ccrgenes), len(pligenes & mpcgenes & ccrgenes)), set_labels = ('CCR >= 95', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
+c = len(ccrgenes - mpcgenes - pligenes)
+m = len(mpcgenes - ccrgenes - pligenes)
+cm = len(mpcgenes & ccrgenes - pligenes)
+p = len(pligenes - ccrgenes - mpcgenes)
+cp = len(pligenes & ccrgenes - mpcgenes)
+pm = len(pligenes & mpcgenes - ccrgenes)
+cpm = len(pligenes & mpcgenes & ccrgenes)
+
+v = venn3_unweighted(subsets = (c, m, cm, p, cp, pm, cpm), set_labels = ('CCR >= 95', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
 plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/venngene.pdf', bbox_inches='tight')
+
+# stacked bar plot
+plt.clf()
+uniques = (c, p, m)
+shared = (cm+cp+cpm, cp+pm+cpm, cm+pm+cpm)
+ind = np.arange(3)    # the x locations for the groups
+width = 0.35       # the width of the bars: can also be len(x) sequence
+
+p1 = plt.bar(ind, uniques, width, color='#388aac')
+p2 = plt.bar(ind, shared, width, bottom=uniques, color='#a1dad7')
+
+plt.ylabel('Genes')
+plt.xticks(ind, ('CCR >= 95', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
+plt.legend((p1[0], p2[0]), ('Unique', 'Shared'))
+plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/cpmbar.pdf', bbox_inches='tight')

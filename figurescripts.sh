@@ -18,6 +18,8 @@ bash pfam/pfamvccr.sh # contains pfam/pfamhist.py, pfam/gerppfam.py, pfam/fameva
 # making Figure 4
 (printf "chr\tstart\tend\tgene\tccr\tmpcreg\n"; bedtools intersect -a essentials/gnomadbased-ccrs.bed.gz -b essentials/mpc.regions.clean.sorted.bed.gz -wao -sorted | cut -f 1,2,3,4,14,19) | bgzip > ccr.v.mpcregions.bed.gz
 Rscript ccr99_versus_missensedepletion.R ccr.v.mpcregions.bed.gz $HOME/public_html/randomplots/ccr99_v_mpc.pdf ccr99vmpc\(supp_table_4\).tsv
+# comparison with pLI and missense depletion (NOW Fig 4)
+bash venndiagram.sh
 
 # missense variant calculation
 
@@ -86,9 +88,6 @@ python cpgexoncalc.py
 
 # pLI v GERP comparison
 python genegerp.py
-
-# comparison with pLI and missense depletion
-bash venndiagram.sh
 
 # coverage justification
 bash cutofftest.sh
