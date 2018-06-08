@@ -42,7 +42,7 @@ if infile == "ccrgerp.pkl":
     constgenes=[]
     ngerps, nccrs = [], []
     for i, j, k, l in zip(gerp, ccr, genes, lengths):
-        if l >= 20:
+        if j > 0: # l>=20
             ngerps.append(i); nccrs.append(j)
         if j >= 95:
             highct+=1

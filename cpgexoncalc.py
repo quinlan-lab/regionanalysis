@@ -92,7 +92,7 @@ def perchrom(vcf_chrom):
         for ranges, vf in zip(mranges2, varflags2):
             seqs = [fa[s:e] for s, e in ranges]
             for (s, e), seq in zip(ranges, seqs):
-                if e - s < 20: continue
+                if e - s < 2: continue
                 cg = u.cg_content(seq)
                 length = float(len(seq))
                 viter = VCF(VCF_PATH)(chrom+":"+str(s+1)+"-"+str(e)) # vcf is 1-based

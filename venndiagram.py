@@ -26,18 +26,20 @@ ccrlist = defaultdict(list)
 sorter = itemgetter(0,3,6)
 grouper = itemgetter(0,3,6)
 ccrtemp = []
-ccrgenes = set(); pligenes = set(); mpcgenes = set()
+ccrgenes = set(); pligenes = set(); mpcgenes = set(); ccr99genes = set()
 for ccr in ccrs:
     ccr = ccr.strip().split("\t")
     if float(ccr[-1]) < 95: continue
     ccrtemp.append(ccr)
 for key, grp in groupby(sorted(ccrtemp, key = sorter), grouper):
     grp = list(grp)
-    chrom = grp[0][0]; gene = grp[0][3]; ranges = grp[0][6]
+    chrom = grp[0][0]; gene = grp[0][3]; ranges = grp[0][6]; pct = float(grp[0][-1])
     r = ranges.split(",")
     ccrgenes.add(gene)
     ccrtree[chrom].add(int(r[0].split("-")[0]), int(r[-1].split("-")[-1]), gene)
     ccrlist[chrom].append((int(r[0].split("-")[0]), gene, int(r[-1].split("-")[-1])))
+    if pct < 99: continue
+    ccr99genes.add(gene)
 #sanity check: 
 #print ccrtree['1'].search(2105429,2105455)
 
@@ -136,6 +138,7 @@ plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/ve
 
 print "Gene based"
 print len(ccrgenes)
+print len(ccr99genes)
 plt.clf()
 # basic set theory
 c = len(ccrgenes - mpcgenes - pligenes)
@@ -149,7 +152,8 @@ cpm = len(pligenes & mpcgenes & ccrgenes)
 v = venn3_unweighted(subsets = (c, m, cm, p, cp, pm, cpm), set_labels = ('CCR >= 95', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
 plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/venngene.pdf', bbox_inches='tight')
 
-# stacked bar plot
+# stacked bar plot for 95th CCR pct
+
 plt.clf()
 uniques = (c, p, m)
 shared = (cm+cp+cpm, cp+pm+cpm, cm+pm+cpm)
@@ -162,4 +166,28 @@ p2 = plt.bar(ind, shared, width, bottom=uniques, color='#a1dad7')
 plt.ylabel('Genes')
 plt.xticks(ind, ('CCR >= 95', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
 plt.legend((p1[0], p2[0]), ('Unique', 'Shared'))
-plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/cpmbar.pdf', bbox_inches='tight')
+plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/cpmbar95.pdf', bbox_inches='tight')
+
+# stacked bar plot for 99th CCR pct
+
+c = len(ccr99genes - mpcgenes - pligenes)
+m = len(mpcgenes - ccr99genes - pligenes)
+cm = len(mpcgenes & ccr99genes - pligenes)
+p = len(pligenes - ccr99genes - mpcgenes)
+cp = len(pligenes & ccr99genes - mpcgenes)
+pm = len(pligenes & mpcgenes - ccr99genes)
+cpm = len(pligenes & mpcgenes & ccr99genes)
+
+plt.clf()
+uniques = (c, p, m)
+shared = (cm+cp+cpm, cp+pm+cpm, cm+pm+cpm)
+ind = np.arange(3)    # the x locations for the groups
+width = 0.35       # the width of the bars: can also be len(x) sequence
+
+p1 = plt.bar(ind, uniques, width, color='#388aac')
+p2 = plt.bar(ind, shared, width, bottom=uniques, color='#a1dad7')
+
+plt.ylabel('Genes')
+plt.xticks(ind, ('CCR >= 99', 'Missense depletion <= 0.4', 'pLI >= 0.9'))
+plt.legend((p1[0], p2[0]), ('Unique', 'Shared'))
+plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/cpmbar99.pdf', bbox_inches='tight')

@@ -76,7 +76,7 @@ def generateresults(infile, results, rset, lens, totlen, bins, pathogenic):
     for line in infile:
         fields=line.strip().split("\t")
         info = fields[7]; ccr=fields[8:]
-        if pathogenic and "_exclude" in info:
+        if "_exclude" in info:
             continue
         ccrkey="\t".join(ccr)
         if ccrkey not in rset:
@@ -110,11 +110,11 @@ bresults, rset, lens, totlen = generateresults(benign, bresults, rset, lens, tot
 keys,ors,props,cis=[],[],[],[]
 for i in presults:
     a,b,c,d=presults[i][0],bresults[i][0],presults[i][1],bresults[i][1]
-    if 0 == b: b=1
-    if 0 == c: c=1
+    if 0 == b: b=1; print "0b (b in bin)", i
+    if 0 == c: c=1; print "0c (p not in bin)", i
     odds=(a*d)/(b*c)
-    if 0 == a: a=1
-    if 0 == d: d=1
+    if 0 == a: a=1; print "0a (p in bin)", i
+    if 0 == d: d=1; print "0d (b not in bin)", i
     or_se=np.sqrt((1/a)+(1/b)+(1/c)+(1/d))
     or_ci = conf_interval(odds, or_se)
     keys.append(i); ors.append(odds)
@@ -138,11 +138,12 @@ if adgenefiles:
     akeys,aors,aprops,acis=[],[],[],[]
     for i in padresults:
         a,b,c,d=padresults[i][0],badresults[i][0],padresults[i][1],badresults[i][1]
-        if 0 == b: b=1
-        if 0 == c: c=1
+        print i, a, b, c, d 
+        if 0 == b: b=1; print "0b (b in bin)", i
+        if 0 == c: c=1; print "0c (p not in bin)", i
         odds=(a*d)/(b*c)
-        if 0 == a: a=1
-        if 0 == d: d=1
+        if 0 == a: a=1; print "0a (p in bin)", i
+        if 0 == d: d=1; print "0d (b not in bin)", i
         or_se=np.sqrt((1/a)+(1/b)+(1/c)+(1/d))
         or_ci = conf_interval(odds, or_se)
         akeys.append(i); aors.append(odds)

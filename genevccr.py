@@ -53,14 +53,16 @@ for i in genes:
 matplotlib.rcParams['pdf.fonttype'] = 42
 matplotlib.rcParams['font.family'] = 'sans-serif'
 matplotlib.rcParams['font.sans-serif'] = ['Arial']
+matplotlib.rcParams['font.size'] = 21
 fig, ax = plt.subplots()
 r, pval = pearsonr(lengths, ccrs)
-ax.scatter(lengths, ccrs, alpha = 0.3, s = 1, label = "r = " + str(r) + "\np-value = " + str(pval))
+ax.scatter(lengths, ccrs, alpha = 0.3, s = 1, label = "r = " + '{:.3f}'.format(r) + "\np-value = " + '{:.3g}'.format(pval), color='#388aac')
 m, b = np.polyfit(lengths, ccrs, 1)
 lengths=np.array(lengths)
 ax.plot(lengths, m*lengths + b, 'k-')
 plt.legend(loc='best')
 plt.xlim(0,20000)
+plt.ylim(0,100)
 plt.tight_layout()
 sns.despine()
 plt.xlabel('Total gene coding sequence (bp)')

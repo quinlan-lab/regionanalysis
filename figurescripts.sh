@@ -39,7 +39,7 @@ Rscript genesw99CCR.R essentials/gnomadbased-ccrs.bed.gz genesw99CCR\(supp_table
 # median lengths and functional variant distance plot
 python median.py essentials/gnomadbased-ccrs.bed.gz exacresiduals/results/unfiltered/exac-regions-novariant.txt $HOME/public_html/randomplots/distances.pdf
 
-# gene size vs percentile 
+# gene size vs percentile (Supp Fig 1)
 python genevccr.py exacresiduals/flatexome.bed essentials/gnomadbased-ccrs.bed.gz $HOME/public_html/randomplots/genevccr.pdf
 
 # singletons and non-singleton model to estimate saturation, and FDR (Figure 6)
@@ -91,3 +91,9 @@ python genegerp.py
 
 # coverage justification
 bash cutofftest.sh
+
+# justification for 20 bp
+bash twentycomp.sh
+
+# how many benigns/pathogenics above 95th pct
+bash advars.sh
