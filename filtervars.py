@@ -1,5 +1,7 @@
 from cyvcf2 import VCF
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 def isfunctional(csqs):
     for csq in csqs.split(","):

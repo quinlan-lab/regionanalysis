@@ -124,6 +124,9 @@ bedtools intersect -a <(zcat exacresiduals/gnomad10x.5syn-ccrs.bed.gz | awk '$14
 python pathotable.py all-ccr-95-patho.txt all-ccr-99-patho.txt
 grep -v "^#" clinvarfunc.vcf | wc -l 
 
+# count clinvar genes
+python clinvargenecount.py pathogenic.combine.vcf.gz benign.combine.vcf.gz adgene.pathogenic.combine.vcf.gz adgene.benign.combine.vcf.gz
+
 ###########################################
 ###### SAMOCHA ############################
 ###########################################

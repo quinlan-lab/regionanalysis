@@ -155,6 +155,7 @@ plt.savefig('/uufs/chpc.utah.edu/common/home/u1021864/public_html/randomplots/ve
 # stacked bar plot for 95th CCR pct
 
 plt.clf()
+print c
 uniques = (c, p, m)
 shared = (cm+cp+cpm, cp+pm+cpm, cm+pm+cpm)
 ind = np.arange(3)    # the x locations for the groups
