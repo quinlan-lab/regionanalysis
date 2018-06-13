@@ -63,13 +63,11 @@ bash python fdr.sh # contains fdr.py
 # can't use combine as is, need to extract functional variants and exclude exac
 
 python vars.py -w pathogenic.combine.vcf.gz -f > funcpathos.vcf
-CP=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95' | bedtools intersect -a stdin -b funcpathos.vcf | cut -f 4 | sort | uniq | wc -l)
-CT=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=95' | cut -f 4 | sort | uniq | wc -l)
-echo "Fraction of genes with CCR >= 95 w/ no known function in ClinVar\n"
-bc <<< "scale=4; ($CT-$CP)/$CT"
-CP=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf | cut -f 4 | sort | uniq | wc -l)
-CT=$(zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | cut -f 4 | sort | uniq | wc -l)
-echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar\n"
+bedtools intersect -a exacresiduals/flatexome.bed -b funcpathos.vcf | cut -f 4 | sort | uniq > clingenes
+zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | cut -f 4 | sort | uniq > ccr99genes
+CP=$(awk 'NR==FNR{a[$1]; next} {for (i in a) if (i == $1) print}' clingenes ccr99genes | wc -l | cut -d " " -f -1)
+CT=$(wc -l ccr99genes | cut -d " " -f -1)
+echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar"
 bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
 
 # pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
