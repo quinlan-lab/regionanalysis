@@ -58,19 +58,30 @@ bc <<< "scale=4; $SI/$TOT"
 
 bash python fdr.sh # contains fdr.py
 
-# code for determining how many genes have no clinvar variation but have high CCRs
-# used ClinVar variants designated as functional and not overlapping ExAC
+# code for determining how many genes have no clinvar variation whatsoever but have high CCRs
+# used ClinVar variants designated as ANYTHING pathogenic or likely pathogenic
 # can't use combine as is, need to extract functional variants and exclude exac
 
-python vars.py -w pathogenic.combine.vcf.gz -f > funcpathos.vcf
-bedtools intersect -a exacresiduals/flatexome.bed -b funcpathos.vcf | cut -f 4 | sort | uniq > clingenes
-zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | cut -f 4 | sort | uniq > ccr99genes
-CP=$(awk 'NR==FNR{a[$1]; next} {for (i in a) if (i == $1) print}' clingenes ccr99genes | wc -l | cut -d " " -f -1)
+bash clinvarunfiltered.sh
+# 95th pct
+zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=95' | cut -f 4 | sort | uniq > ccr95genes
+grep -f clingenes -v -w ccr95genes > notclingenes95
+CP=$(wc -l notclingenes95 | cut -d " " -f -1)
+CT=$(wc -l ccr95genes | cut -d " " -f -1)
+echo "Fraction of genes with CCR >= 95 w/ no known function in ClinVar"
+bc <<< "scale=4; ($CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
+zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=95' | cut -f 4 | sort | uniq -c | sort -k1,1nr | grep -f clingenes -v -w > notclingenes95ranked
+# 99th pct
+zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=99' | cut -f 4 | sort | uniq > ccr99genes
+grep -f clingenes -v -w ccr99genes > notclingenes99
+CP=$(wc -l notclingenes99 | cut -d " " -f -1)
 CT=$(wc -l ccr99genes | cut -d " " -f -1)
 echo "Fraction of genes with CCR >= 99 w/ no known function in ClinVar"
-bc <<< "scale=4; ($CT-$CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
+bc <<< "scale=4; ($CP)/$CT" #subtraction means no -v necessary, and because of ccrs in same gene w/o intersection, this works better
+zcat $HOME/public_html/files/ccrs.v2.20180420.bed12.bed.gz | awk '$5>=99' | cut -f 4 | sort | uniq -c | sort -k1,1nr | grep -f clingenes -v -w > notclingenes99ranked
 
 # pfams with no clinvar vars at 99% CCR; list of genes and domains may correlate with EM domains from Kasper's paper
+python vars.py -w pathogenic.combine.vcf.gz -f > funcpathos.vcf
 zcat essentials/gnomadbased-ccrs.bed.gz | awk '$NF>=99' | bedtools intersect -a stdin -b funcpathos.vcf -v | bedtools intersect -a pfam/pfam.genome.gene.bed.gz -b stdin -sorted -u | bedtools intersect -a stdin -b funcpathos.vcf -v | cut -f 4,5 | sort | uniq -c | sort -k1,1nr | sed 's/^\s*//g' | tr -s " " "\t" > pfamenriched\(supp_table_3\).tsv
 
 # fetal variant comparison
