@@ -18,7 +18,7 @@ parser.add_argument("-q","--count", help="occurrences of each pfam domain") #pfa
 parser.add_argument("-o","--output", help="histogram pic") #pfam_hists.pdf
 args=parser.parse_args()
 table=open(os.path.dirname(os.path.expandvars(args.output))+'/pfam_stats(supp_table_3).tsv','w')
-table.write('domain\tfull_name(if_applicable)\tnumber_of_occurrences\ttotal_bp\tbp_in_95_ccr_bin\tbinomial_p_val\n')
+table.write('domain\tfull_name(if_applicable)\tnumber_of_occurrences\ttotal_bp\tbp_in_95_ccr_bin\tfishers_p_val\n')
 
 with open(args.pfam) as f:
     pfams=[_ for _ in f]

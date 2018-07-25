@@ -71,13 +71,17 @@ python stepplot.py clinvar
 # ad gene files
 python $HOME/software/pathoscore/pathoscore.py annotate pathogenic.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.pathogenic.combine
 python $HOME/software/pathoscore/pathoscore.py annotate benign.combine.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.benign.combine
+python $HOME/software/pathoscore/pathoscore.py annotate benignfilter.vcf.gz --exclude $HOME/software/pathoscore/gene-sets/GRCh37/ad_genes/ad_gene_complement.bed.gz --prefix adgene.benignfilter
 
 # get intersection of ad genes pathogenic benign and ccrs for odds ratio
 bedtools intersect -a adgene.pathogenic.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > patho-adgene-ccr.txt
 bedtools intersect -a adgene.benign.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benign-adgene-ccr.txt
+bedtools intersect -a benignfilter.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benignfilter-ccr.txt
+bedtools intersect -a adgene.benignfilter.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > benignfilter-adgene-ccr.txt
 
 # create oddsratio plot
 python oddsratio.py -f patho-ccr.txt benign-ccr.txt -a patho-adgene-ccr.txt benign-adgene-ccr.txt -o clinvar -l "All ClinVar Genes" "AD ClinVar Genes"
+python oddsratio.py -f patho-ccr.txt benignfilter-ccr.txt -a patho-adgene-ccr.txt benignfilter-adgene-ccr.txt -o clinvarfilter -l "All ClinVar Genes (Filtered)" "AD ClinVar Genes (Filtered)"
 
 # to get AD variant data and ROCs
 python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $HOME/public_html/pathoscore/clinvarad -s CCR -s CADD -s GERP -s MPC -s REVEL -i MTR -s pLI --suffix pdf adgene.pathogenic.combine.vcf.gz adgene.benign.combine.vcf.gz
@@ -160,9 +164,11 @@ python $HOME/software/pathoscore/pathoscore.py evaluate --functional --prefix $H
 # get intersection of pathogenic and ccrs for odds ratio
 bedtools intersect -a neurodev.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > neurodev-ccr.txt
 bedtools intersect -a control.combine.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > control-ccr.txt
+bedtools intersect -a controlfilter.vcf.gz -b exacresiduals/gnomad10x.5syn-ccrs.bed.gz -wb > controlfilter-ccr.txt
 
 # create oddsratio plot
 python oddsratio.py -f neurodev-ccr.txt control-ccr.txt -o samocha
+python oddsratio.py -f neurodev-ccr.txt controlfilter-ccr.txt -o samochafilter
 
 # Xchrom oddsratio plot
 bedtools intersect -a neurodev.x.vcf.gz -b exacresiduals/xchrom-ccrs.bed.gz -wb > neurodev-x.txt
