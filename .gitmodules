@@ -1,0 +1,3 @@
+[submodule "exacresiduals"]
+	path = exacresiduals
+	url = https://github.com/quinlan-lab/exacresiduals
